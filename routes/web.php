@@ -19,3 +19,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+if (app()->environment('local')) {
+    require __DIR__.'/dev.php';
+}
