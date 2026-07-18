@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Http\Controllers\Gardens;
+
+use App\Actions\Gardens\ArchiveGarden;
+use App\Actions\Gardens\CreateGarden;
+use App\Actions\Gardens\UnarchiveGarden;
+use App\Actions\Gardens\UpdateGarden;
+use App\Data\Countries;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Gardens\StoreGardenRequest;
+use App\Http\Requests\Gardens\UpdateGardenRequest;
+use App\Models\Garden;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class GardenController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $user = $request->user();
+
+        $activeGardens = $user->gardens()
+            ->whereNull('archived_at')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        $archivedGardens = $user->gardens()
+            ->whereNotNull('archived_at')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return Inertia::render('gardens/index', [
+            'activeGardens' => $activeGardens,
+            'archivedGardens' => $archivedGardens,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('gardens/create', [
+            'countries' => Countries::LIST,
+        ]);
+    }
+
+    public function store(StoreGardenRequest $request, CreateGarden $action): RedirectResponse
+    {
+        $action->handle($request->user(), $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Garten erstellt.')]);
+
+        return to_route('gardens.index');
+    }
+
+    public function show(Request $request, Garden $garden): Response
+    {
+        Gate::authorize('view', $garden);
+
+        return Inertia::render('gardens/show', [
+            'garden' => $garden,
+        ]);
+    }
+
+    public function edit(Request $request, Garden $garden): Response
+    {
+        Gate::authorize('update', $garden);
+
+        return Inertia::render('gardens/edit', [
+            'garden' => $garden,
+            'countries' => Countries::LIST,
+        ]);
+    }
+
+    public function update(UpdateGardenRequest $request, Garden $garden, UpdateGarden $action): RedirectResponse
+    {
+        $action->handle($garden, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Garten aktualisiert.')]);
+
+        return to_route('gardens.show', $garden);
+    }
+
+    public function archive(Request $request, Garden $garden, ArchiveGarden $action): RedirectResponse
+    {
+        Gate::authorize('archive', $garden);
+
+        $action->handle($garden);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Garten archiviert.')]);
+
+        return to_route('gardens.show', $garden);
+    }
+
+    public function unarchive(Request $request, Garden $garden, UnarchiveGarden $action): RedirectResponse
+    {
+        Gate::authorize('unarchive', $garden);
+
+        $action->handle($garden);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Garten aktiviert.')]);
+
+        return to_route('gardens.show', $garden);
+    }
+
+    public function destroy(Request $request, Garden $garden): RedirectResponse
+    {
+        Gate::authorize('delete', $garden);
+
+        $garden->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Garten gelöscht.')]);
+
+        return to_route('gardens.index');
+    }
+}

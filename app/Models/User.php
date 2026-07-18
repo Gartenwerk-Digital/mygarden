@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -42,6 +43,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Team> $ownedTeams
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
+ * @property-read Collection<int, Garden> $gardens
  */
 #[Fillable([
     'name',
@@ -89,5 +91,13 @@ class User extends Authenticatable implements PasskeyUser
         return $this->username_changed_at === null
             ? null
             : Carbon::parse($this->username_changed_at)->addDays(30);
+    }
+
+    /**
+     * @return HasMany<Garden, $this>
+     */
+    public function gardens(): HasMany
+    {
+        return $this->hasMany(Garden::class);
     }
 }
