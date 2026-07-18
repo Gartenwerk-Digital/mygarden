@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('areas', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('garden_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('parent_id')->nullable()->constrained('areas')->restrictOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('areas')->nullOnDelete();
             $table->string('name', 100);
             $table->string('type', 30);
             $table->text('description')->nullable();
