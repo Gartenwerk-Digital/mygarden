@@ -93,6 +93,9 @@ class User extends Authenticatable implements PasskeyUser
             : Carbon::parse($this->username_changed_at)->addDays(30);
     }
 
+    /**
+     * @return HasMany<Garden, $this>
+     */
     public function gardens(): HasMany
     {
         return $this->hasMany(Garden::class);

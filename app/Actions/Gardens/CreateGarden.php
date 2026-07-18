@@ -12,6 +12,9 @@ class CreateGarden
      */
     public function handle(User $user, array $validated): Garden
     {
-        return $user->gardens()->create($validated);
+        /** @var Garden $garden */
+        $garden = $user->gardens()->create($validated);
+
+        return $garden;
     }
 }

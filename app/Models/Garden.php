@@ -52,6 +52,9 @@ class Garden extends Model
         return $this->archived_at !== null;
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
