@@ -2,8 +2,7 @@ import { EyeOff, Globe, Lock, Users } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-type GardenVisibility = 'private' | 'connections' | 'unlisted' | 'public';
+import type { GardenVisibility } from '@/types/garden';
 
 type Props = {
     visibility: GardenVisibility;
