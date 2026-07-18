@@ -8,27 +8,21 @@ import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
-import { index as teams } from '@/routes/teams';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Profil',
         href: edit(),
         icon: null,
     },
     {
-        title: 'Security',
+        title: 'Sicherheit',
         href: editSecurity(),
         icon: null,
     },
     {
-        title: 'Teams',
-        href: teams(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
+        title: 'Erscheinungsbild',
         href: editAppearance(),
         icon: null,
     },
@@ -40,8 +34,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title="Einstellungen"
+                description="Profil- und Kontoeinstellungen verwalten"
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">

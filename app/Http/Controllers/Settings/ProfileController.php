@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\UpdateUserProfile;
+use App\Data\Countries;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -14,38 +16,32 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Show the user's profile settings page.
-     */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+
         return Inertia::render('settings/profile', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'nextUsernameChangeAllowedAt' => $user->nextUsernameChangeAllowedAt()?->toDateString(),
+            'countries' => Countries::LIST,
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, UpdateUserProfile $action): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $action->update(
+            user: $request->user(),
+            validated: $request->validated(),
+            avatarFile: $request->hasFile('avatar') ? $request->file('avatar') : null,
+            removeAvatar: (bool) ($request->validated()['remove_avatar'] ?? false),
+        );
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profil aktualisiert.')]);
 
         return to_route('profile.edit');
     }
 
-    /**
-     * Delete the user's profile.
-     */
     public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
         $user = $request->user();

@@ -12,15 +12,15 @@ export function UserInfo({
     team?: Team | null;
 }) {
     const getInitials = useInitials();
-    const showAvatar = Boolean(user.avatar && user.avatar !== '');
+    const avatarUrl = user.avatar_path ? `/storage/${user.avatar_path}` : null;
 
     return (
         <>
             <Avatar className="h-8 w-8 overflow-hidden rounded-lg">
-                {showAvatar ? (
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt={user.name} />
                 ) : null}
-                <AvatarFallback className="rounded-lg text-black dark:text-white">
+                <AvatarFallback className="rounded-lg text-foreground">
                     {getInitials(user.name)}
                 </AvatarFallback>
             </Avatar>

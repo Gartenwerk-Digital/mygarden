@@ -14,28 +14,31 @@ class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules, ProfileValidationRules;
 
-    public function __construct(private CreateTeam $createTeam)
-    {
-        //
-    }
+    public function __construct(private CreateTeam $createTeam) {}
 
     /**
-     * Validate and create a newly registered user.
-     *
      * @param  array<string, string>  $input
      */
     public function create(array $input): User
     {
+        $input['username'] = mb_strtolower(trim($input['username'] ?? ''));
+
         Validator::make($input, [
-            ...$this->profileRules(),
+            'name' => $this->nameDisplayRules(),
+            'username' => $this->usernameRules(),
+            'email' => $this->emailRules(),
             'password' => $this->passwordRules(),
+            'age_confirmation' => ['accepted'],
+            'terms_accepted' => ['accepted'],
         ])->validate();
 
         return DB::transaction(function () use ($input) {
             $user = User::create([
                 'name' => $input['name'],
+                'username' => $input['username'],
                 'email' => $input['email'],
                 'password' => $input['password'],
+                'terms_accepted_at' => now(),
             ]);
 
             $this->createTeam->handle($user, $user->name."'s Team", isPersonal: true);
