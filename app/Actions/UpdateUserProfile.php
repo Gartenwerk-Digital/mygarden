@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -42,7 +43,7 @@ class UpdateUserProfile
                 $emailChanged = isset($validated['email']) && $validated['email'] !== $user->email;
 
                 if ($normalizedUsername !== $user->username) {
-                    $user->username_changed_at = now();
+                    $user->username_changed_at = Carbon::now();
                 }
 
                 $profileData = collect($validated)
