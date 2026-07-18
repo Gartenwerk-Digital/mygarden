@@ -117,3 +117,56 @@ If existing pages and components support dark mode, new pages and components mus
 - Trying to use `tailwind.config.js` instead of CSS `@theme` directive
 - Using margins for spacing between siblings instead of gap utilities
 - Forgetting to add dark mode variants when the project uses dark mode
+
+---
+
+## myGarden Design Tokens
+
+This project uses a garden-themed design system. All tokens are defined in
+`resources/css/app.css`. Use semantic tokens — never hardcode OKLCH values
+or use `neutral-NNN` classes when a semantic equivalent exists.
+
+### Colour Token Quick Reference
+
+| Utility | Meaning |
+|---|---|
+| `bg-background` | Warm sand page background |
+| `bg-card` | Slightly elevated card surface |
+| `bg-primary` | Forest green (CTA, active states) |
+| `bg-secondary` | Warm sand-200 (subdued surfaces) |
+| `bg-muted` | Sand-100 (ghost area, input fill) |
+| `bg-accent` | **Terracotta** – use sparingly, not as universal hover |
+| `bg-success` | Green success state |
+| `bg-warning` | Amber (hue 55) – distinct from accent/terracotta |
+| `bg-destructive` | Red error/destructive |
+
+### Button Hover Convention
+
+Ghost and outline buttons use `hover:bg-muted hover:text-foreground` (not accent).
+Use `hover:bg-accent` only for deliberate terracotta hover contexts.
+
+### Fonts
+
+| Utility | Font | Use |
+|---|---|---|
+| `font-sans` | Work Sans Variable | All product UI (default) |
+| `font-serif` | Source Serif 4 Variable | Marketing/Hero only — never in app UI |
+| `font-mono` | JetBrains Mono Variable | Code, metrics, IDs |
+
+### New Radius Utilities
+
+- `rounded-xl` → `1.25rem` (override of Tailwind default)
+- `rounded-full` → Tailwind built-in (`9999px`)
+
+### Effect Token Usage
+
+Shadow tokens (`--shadow-sm/md/lg`) and motion tokens (`--ease-standard`,
+`--duration-fast/normal`) are CSS custom properties — use via `style` prop
+or `shadow-[var(--shadow-md)]` Tailwind arbitrary value syntax.
+
+### Quality Gate
+
+Run `npm run check:colors` before committing. It fails on:
+- Hex values (`#...`)
+- `rgb(digit...` or `hsl(digit...` (bare color functions, not CSS var refs)
+- `neutral-NNN` Tailwind classes in TypeScript/TSX files
