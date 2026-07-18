@@ -1,7 +1,7 @@
 export type User = {
     id: number;
     name: string;
-    username: string | null;
+    username: string;
     username_changed_at: string | null;
     email: string;
     bio: string | null;
