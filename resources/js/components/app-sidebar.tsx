@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid, Sprout } from 'lucide-react';
+import { index as gardensIndex } from '@/actions/App/Http/Controllers/Gardens/GardenController';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -22,11 +23,19 @@ export function AppSidebar() {
         ? dashboard(page.props.currentTeam.slug)
         : '/';
 
+    const currentUrl = page.url;
+
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
             href: dashboardUrl,
             icon: LayoutGrid,
+        },
+        {
+            title: 'Meine Gärten',
+            href: gardensIndex().url,
+            icon: Sprout,
+            isActive: currentUrl.startsWith('/gardens'),
         },
     ];
 
