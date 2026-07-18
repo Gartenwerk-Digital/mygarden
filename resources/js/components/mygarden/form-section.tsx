@@ -9,7 +9,12 @@ type Props = {
     className?: string;
 };
 
-export function FormSection({ title, description, children, className }: Props) {
+export function FormSection({
+    title,
+    description,
+    children,
+    className,
+}: Props) {
     return (
         <div
             className={cn(

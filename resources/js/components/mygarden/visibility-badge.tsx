@@ -12,7 +12,11 @@ type Props = {
 
 const config: Record<
     GardenVisibility,
-    { label: string; icon: typeof Lock; variant: 'default' | 'secondary' | 'outline' }
+    {
+        label: string;
+        icon: typeof Lock;
+        variant: 'default' | 'secondary' | 'outline';
+    }
 > = {
     private: { label: 'Privat', icon: Lock, variant: 'secondary' },
     connections: { label: 'Kontakte', icon: Users, variant: 'secondary' },

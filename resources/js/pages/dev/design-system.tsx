@@ -1,13 +1,5 @@
 import { Head } from '@inertiajs/react';
-import {
-    AlertCircle,
-    CheckCircle2,
-    Info,
-    Leaf,
-    Loader2,
-    Sprout,
-    TriangleAlert,
-} from 'lucide-react';
+import { AlertCircle, Info, Leaf, Loader2, Sprout } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/mygarden/empty-state';
@@ -30,7 +22,13 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -64,7 +62,9 @@ function ColorSwatch({
 }) {
     return (
         <div className="flex flex-col gap-1">
-            <div className={`h-12 rounded-md border border-border ${className}`} />
+            <div
+                className={`h-12 rounded-md border border-border ${className}`}
+            />
             <span className={`text-xs ${textClass}`}>{name}</span>
         </div>
     );
@@ -74,7 +74,7 @@ function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
     return (
         <textarea
             className={[
-                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
                 className,
             ]
                 .filter(Boolean)
@@ -100,21 +100,34 @@ export default function DesignSystem() {
                         myGarden Design System
                     </h1>
                     <p className="mt-2 text-muted-foreground">
-                        Lokale Referenzseite · nur in der lokalen Umgebung verfügbar
+                        Lokale Referenzseite · nur in der lokalen Umgebung
+                        verfügbar
                     </p>
                 </div>
 
                 {/* Colours */}
                 <Section title="Farben – Semantisch">
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
-                        <ColorSwatch name="background" className="bg-background" />
-                        <ColorSwatch name="foreground" className="bg-foreground" />
+                        <ColorSwatch
+                            name="background"
+                            className="bg-background"
+                        />
+                        <ColorSwatch
+                            name="foreground"
+                            className="bg-foreground"
+                        />
                         <ColorSwatch name="card" className="bg-card" />
                         <ColorSwatch name="primary" className="bg-primary" />
-                        <ColorSwatch name="secondary" className="bg-secondary" />
+                        <ColorSwatch
+                            name="secondary"
+                            className="bg-secondary"
+                        />
                         <ColorSwatch name="muted" className="bg-muted" />
                         <ColorSwatch name="accent" className="bg-accent" />
-                        <ColorSwatch name="destructive" className="bg-destructive" />
+                        <ColorSwatch
+                            name="destructive"
+                            className="bg-destructive"
+                        />
                         <ColorSwatch name="success" className="bg-success" />
                         <ColorSwatch name="warning" className="bg-warning" />
                         <ColorSwatch name="border" className="bg-border" />
@@ -132,9 +145,18 @@ export default function DesignSystem() {
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                         <ColorSwatch name="sidebar" className="bg-sidebar" />
-                        <ColorSwatch name="sidebar-primary" className="bg-sidebar-primary" />
-                        <ColorSwatch name="sidebar-accent" className="bg-sidebar-accent" />
-                        <ColorSwatch name="sidebar-border" className="bg-sidebar-border" />
+                        <ColorSwatch
+                            name="sidebar-primary"
+                            className="bg-sidebar-primary"
+                        />
+                        <ColorSwatch
+                            name="sidebar-accent"
+                            className="bg-sidebar-accent"
+                        />
+                        <ColorSwatch
+                            name="sidebar-border"
+                            className="bg-sidebar-border"
+                        />
                     </div>
                 </Section>
 
@@ -149,8 +171,8 @@ export default function DesignSystem() {
                                 Mein Garten im Sommer
                             </p>
                             <p className="font-sans text-base">
-                                Rosen, Lavendel und wilde Kräuter wachsen nebeneinander. Der
-                                Garten ist ein Ort der Ruhe.
+                                Rosen, Lavendel und wilde Kräuter wachsen
+                                nebeneinander. Der Garten ist ein Ort der Ruhe.
                             </p>
                             <p className="font-sans text-sm text-muted-foreground">
                                 Kleine Beschreibung · 14px · muted-foreground
@@ -211,7 +233,10 @@ export default function DesignSystem() {
                                 ['rounded-full', 'radius-full'],
                             ] as const
                         ).map(([cls, name]) => (
-                            <div key={cls} className="flex flex-col items-center gap-2">
+                            <div
+                                key={cls}
+                                className="flex flex-col items-center gap-2"
+                            >
                                 <div
                                     className={`h-16 w-16 bg-primary ${cls}`}
                                 />
@@ -227,9 +252,16 @@ export default function DesignSystem() {
                 <Section title="Schatten">
                     <div className="flex flex-wrap gap-6">
                         {(
-                            ['--shadow-sm', '--shadow-md', '--shadow-lg'] as const
+                            [
+                                '--shadow-sm',
+                                '--shadow-md',
+                                '--shadow-lg',
+                            ] as const
                         ).map((v) => (
-                            <div key={v} className="flex flex-col items-center gap-2">
+                            <div
+                                key={v}
+                                className="flex flex-col items-center gap-2"
+                            >
                                 <div
                                     className="h-20 w-32 rounded-lg bg-card"
                                     style={{ boxShadow: `var(${v})` }}
@@ -246,13 +278,22 @@ export default function DesignSystem() {
                 <Section title="Bewegung">
                     <div className="flex gap-4 text-sm text-muted-foreground">
                         <div>
-                            <code className="font-mono text-xs">--duration-fast</code>: 120ms
+                            <code className="font-mono text-xs">
+                                --duration-fast
+                            </code>
+                            : 120ms
                         </div>
                         <div>
-                            <code className="font-mono text-xs">--duration-normal</code>: 200ms
+                            <code className="font-mono text-xs">
+                                --duration-normal
+                            </code>
+                            : 200ms
                         </div>
                         <div>
-                            <code className="font-mono text-xs">--ease-standard</code>: cubic-bezier(0.2, 0.6, 0.2, 1)
+                            <code className="font-mono text-xs">
+                                --ease-standard
+                            </code>
+                            : cubic-bezier(0.2, 0.6, 0.2, 1)
                         </div>
                     </div>
                 </Section>
@@ -292,12 +333,13 @@ export default function DesignSystem() {
                     <div className="grid max-w-md gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="ds-input">Bezeichnung</Label>
-                            <Input id="ds-input" placeholder="z.B. Hochbeet Süd" />
+                            <Input
+                                id="ds-input"
+                                placeholder="z.B. Hochbeet Süd"
+                            />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="ds-input-error">
-                                Mit Fehler
-                            </Label>
+                            <Label htmlFor="ds-input-error">Mit Fehler</Label>
                             <Input
                                 id="ds-input-error"
                                 placeholder="Pflichtfeld"
@@ -332,8 +374,12 @@ export default function DesignSystem() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="bed">Beet</SelectItem>
-                                    <SelectItem value="lawn">Rasenfläche</SelectItem>
-                                    <SelectItem value="terrace">Terrasse</SelectItem>
+                                    <SelectItem value="lawn">
+                                        Rasenfläche
+                                    </SelectItem>
+                                    <SelectItem value="terrace">
+                                        Terrasse
+                                    </SelectItem>
                                     <SelectItem value="path">Weg</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -342,9 +388,7 @@ export default function DesignSystem() {
                             <Checkbox
                                 id="ds-checkbox"
                                 checked={checked}
-                                onCheckedChange={(v) =>
-                                    setChecked(v === true)
-                                }
+                                onCheckedChange={(v) => setChecked(v === true)}
                             />
                             <Label htmlFor="ds-checkbox">
                                 Garten ist öffentlich sichtbar
@@ -387,7 +431,8 @@ export default function DesignSystem() {
                             <AlertCircle className="h-4 w-4" />
                             <AlertTitle>Fehler</AlertTitle>
                             <AlertDescription>
-                                Etwas ist schiefgelaufen. Bitte versuche es erneut.
+                                Etwas ist schiefgelaufen. Bitte versuche es
+                                erneut.
                             </AlertDescription>
                         </Alert>
                     </div>
@@ -404,7 +449,10 @@ export default function DesignSystem() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <ImagePlaceholder aspectRatio="16/9" label="Foto hinzufügen" />
+                                <ImagePlaceholder
+                                    aspectRatio="16/9"
+                                    label="Foto hinzufügen"
+                                />
                             </CardContent>
                         </Card>
                         <Card>
@@ -491,7 +539,9 @@ export default function DesignSystem() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="garden-desc">Beschreibung</Label>
+                                    <Label htmlFor="garden-desc">
+                                        Beschreibung
+                                    </Label>
                                     <Textarea
                                         id="garden-desc"
                                         placeholder="Optional…"
@@ -518,7 +568,7 @@ export default function DesignSystem() {
                 </Section>
 
                 <Section title="myGarden – ImagePlaceholder">
-                    <div className="grid grid-cols-3 gap-4 max-w-lg">
+                    <div className="grid max-w-lg grid-cols-3 gap-4">
                         <ImagePlaceholder aspectRatio="4/3" label="4:3" />
                         <ImagePlaceholder aspectRatio="1/1" label="1:1" />
                         <ImagePlaceholder aspectRatio="16/9" label="16:9" />
@@ -529,7 +579,7 @@ export default function DesignSystem() {
                 <Section title="Interaktionszustände">
                     <div className="flex flex-wrap gap-3">
                         <Button>Normal</Button>
-                        <Button className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-2 ring-ring ring-offset-2">
+                        <Button className="ring-2 ring-ring ring-offset-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                             Focus
                         </Button>
                         <Button disabled>Disabled</Button>
