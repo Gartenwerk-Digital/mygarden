@@ -15,6 +15,7 @@ Diese Regeln gelten für alle React-Komponenten und Seiten unter `resources/js/`
 
 - `font-sans` (Work Sans): gesamtes Produkt-UI – Standard.
 - `font-serif` (Source Serif 4): ausschließlich Marketing- und Hero-Texte – **niemals in der App-UI**.
+  - Ausnahme: `resources/js/pages/dev/design-system.tsx` darf `font-serif` als Typografie-Specimen verwenden.
 - `font-mono` (JetBrains Mono): Messwerte, Identifikatoren, Code-Blöcke.
 
 ## Icons

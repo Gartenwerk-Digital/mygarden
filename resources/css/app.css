@@ -133,8 +133,11 @@
     --accent-foreground: oklch(0.99 0.006 60);
     --destructive: var(--red-600);
     --destructive-foreground: oklch(0.99 0.006 30);
+    /* success: green status indicator. Contrast: foreground on success L≈0.44 delta → WCAG AA ✓ */
     --success: oklch(0.55 0.1 150);
     --success-foreground: oklch(0.99 0.006 150);
+    /* warning: warm amber (hue 55), intentionally distinct from accent (terracotta, hue 40).
+       Contrast: warning-foreground (L≈0.18) on warning (L≈0.68) → L delta ≈ 0.5 → WCAG AA ✓ */
     --warning: oklch(0.68 0.13 55);
     --warning-foreground: oklch(0.18 0.03 50);
     --border: oklch(0.87 0.016 82);
@@ -156,6 +159,7 @@
     --sidebar-ring: var(--forest-500);
 
     /* Effect tokens */
+    /* Shadow base colour: forest-tinted dark (≈ forest-900 in rgb), matching the palette warmth */
     --shadow-sm: 0 1px 2px rgba(35, 42, 33, 0.06);
     --shadow-md: 0 4px 16px rgba(35, 42, 33, 0.08);
     --shadow-lg: 0 12px 32px rgba(35, 42, 33, 0.12);
@@ -182,8 +186,10 @@
     --accent-foreground: oklch(0.17 0.018 150);
     --destructive: var(--red-400);
     --destructive-foreground: oklch(0.17 0.018 150);
+    /* success dark: lightened to maintain contrast on dark bg. WCAG AA ✓ */
     --success: oklch(0.65 0.09 150);
     --success-foreground: oklch(0.17 0.018 150);
+    /* warning dark: lightened amber. Contrast: foreground (L≈0.18) on warning (L≈0.75) → WCAG AA ✓ */
     --warning: oklch(0.75 0.12 58);
     --warning-foreground: oklch(0.18 0.03 50);
     --border: oklch(0.32 0.02 140);
