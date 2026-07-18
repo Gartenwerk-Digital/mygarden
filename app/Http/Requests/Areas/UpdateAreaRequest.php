@@ -6,6 +6,8 @@ use App\Enums\AreaType;
 use App\Enums\MoistureLevel;
 use App\Enums\SoilType;
 use App\Enums\SunExposure;
+use App\Models\Area;
+use App\Models\Garden;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -47,7 +49,10 @@ class UpdateAreaRequest extends FormRequest
     public function rules(): array
     {
         $garden = $this->route('garden');
+        assert($garden instanceof Garden);
+
         $area = $this->route('area');
+        assert($area instanceof Area);
 
         return [
             'name' => ['required', 'string', 'max:100'],
@@ -74,11 +79,9 @@ class UpdateAreaRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $area = $this->route('area');
-            $parentId = $this->input('parent_id');
+            assert($area instanceof Area);
 
-            if ($area === null) {
-                return;
-            }
+            $parentId = $this->input('parent_id');
 
             if ($parentId !== null && $parentId == $area->id) {
                 $validator->errors()->add('parent_id', __('Ein Bereich kann nicht sein eigener übergeordneter Bereich sein.'));

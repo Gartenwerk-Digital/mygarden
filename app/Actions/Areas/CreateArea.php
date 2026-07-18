@@ -7,8 +7,14 @@ use App\Models\Garden;
 
 class CreateArea
 {
+    /**
+     * @param  array<string, mixed>  $validated
+     */
     public function handle(Garden $garden, array $validated): Area
     {
-        return $garden->areas()->create($validated);
+        /** @var Area $area */
+        $area = $garden->areas()->create($validated);
+
+        return $area;
     }
 }

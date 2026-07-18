@@ -7,6 +7,7 @@ use App\Enums\MoistureLevel;
 use App\Enums\SoilType;
 use App\Enums\SunExposure;
 use App\Models\Area;
+use App\Models\Garden;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -48,6 +49,7 @@ class StoreAreaRequest extends FormRequest
     public function rules(): array
     {
         $garden = $this->route('garden');
+        assert($garden instanceof Garden);
 
         return [
             'name' => ['required', 'string', 'max:100'],
@@ -78,7 +80,8 @@ class StoreAreaRequest extends FormRequest
                 return;
             }
 
-            $parent = Area::find($parentId);
+            /** @var Area|null $parent */
+            $parent = Area::find((int) $parentId);
 
             if ($parent !== null && $parent->parent_id !== null) {
                 $validator->errors()->add('parent_id', __('Unterbereiche können keine weiteren Unterbereiche enthalten.'));
