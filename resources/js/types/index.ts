@@ -1,3 +1,4 @@
+export type * from './area';
 export type * from './auth';
 export type * from './garden';
 export type * from './navigation';
