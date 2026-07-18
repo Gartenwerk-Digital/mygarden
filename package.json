@@ -10,7 +10,8 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
-        "types:check": "tsc --noEmit"
+        "types:check": "tsc --noEmit",
+        "check:colors": "! grep -rn --include='*.tsx' --include='*.ts' -E '#[0-9A-Fa-f]{3,8}|rgb\\([^v]|hsl\\([^v]|neutral-[0-9]+' resources/js/ | grep -v 'resources/js/pages/welcome.tsx'"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
