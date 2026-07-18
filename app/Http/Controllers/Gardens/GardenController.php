@@ -55,12 +55,31 @@ class GardenController extends Controller
         return to_route('gardens.index');
     }
 
-    public function show(Request $request, Garden $garden): Response
+    public function show(Garden $garden): Response
     {
         Gate::authorize('view', $garden);
 
+        $activeAreas = $garden->areas()
+            ->with(['children' => fn ($q) => $q->whereNull('archived_at')->orderBy('name')])
+            ->whereNull('parent_id')
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->get();
+
+        $activeAreas->each(function ($area): void {
+            $area->setRelation('archivedChildren', $area->children()->whereNotNull('archived_at')->orderBy('name')->get());
+        });
+
+        $archivedAreas = $garden->areas()
+            ->whereNull('parent_id')
+            ->whereNotNull('archived_at')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('gardens/show', [
             'garden' => $garden,
+            'activeAreas' => $activeAreas,
+            'archivedAreas' => $archivedAreas,
         ]);
     }
 

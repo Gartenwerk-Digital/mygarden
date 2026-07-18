@@ -4,10 +4,13 @@ import {
     ArchiveRestore,
     MapPin,
     Pencil,
+    Plus,
     Ruler,
+    Sprout,
     Trash2,
 } from 'lucide-react';
 
+import { create as createArea } from '@/actions/App/Http/Controllers/Areas/AreaController';
 import {
     archive,
     destroy,
@@ -16,16 +19,24 @@ import {
     show,
     unarchive,
 } from '@/actions/App/Http/Controllers/Gardens/GardenController';
+import { AreaCard } from '@/components/areas/area-card';
+import { EmptyState } from '@/components/mygarden/empty-state';
 import { PageHeader } from '@/components/mygarden/page-header';
 import { VisibilityBadge } from '@/components/mygarden/visibility-badge';
 import { Button } from '@/components/ui/button';
-import type { Garden } from '@/types/garden';
+import type { Area, Garden } from '@/types';
 
 type PageProps = {
     garden: Garden;
+    activeAreas: Area[];
+    archivedAreas: Area[];
 };
 
-export default function GardensShow({ garden }: PageProps) {
+export default function GardensShow({
+    garden,
+    activeAreas,
+    archivedAreas,
+}: PageProps) {
     const handleArchive = () => {
         router.patch(archive(garden).url);
     };
@@ -143,6 +154,65 @@ export default function GardensShow({ garden }: PageProps) {
                             </div>
                         )}
                     </div>
+                </div>
+
+                <div className="mt-10">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">Bereiche</h2>
+                        <Button asChild size="sm">
+                            <Link href={createArea(garden).url}>
+                                <Plus className="mr-2 size-4" />
+                                Bereich hinzufügen
+                            </Link>
+                        </Button>
+                    </div>
+
+                    {activeAreas.length === 0 && archivedAreas.length === 0 ? (
+                        <EmptyState
+                            icon={Sprout}
+                            title="Noch keine Bereiche"
+                            description="Unterteile deinen Garten in Bereiche wie Beete, Rasen oder Terrasse."
+                            action={
+                                <Button asChild size="sm">
+                                    <Link href={createArea(garden).url}>
+                                        <Plus className="mr-2 size-4" />
+                                        Ersten Bereich erstellen
+                                    </Link>
+                                </Button>
+                            }
+                        />
+                    ) : (
+                        <div className="space-y-6">
+                            {activeAreas.length > 0 && (
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {activeAreas.map((area) => (
+                                        <AreaCard
+                                            key={area.id}
+                                            area={area}
+                                            garden={garden}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {archivedAreas.length > 0 && (
+                                <div>
+                                    <p className="mb-3 text-sm font-medium text-muted-foreground">
+                                        Archiviert
+                                    </p>
+                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                        {archivedAreas.map((area) => (
+                                            <AreaCard
+                                                key={area.id}
+                                                area={area}
+                                                garden={garden}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </>
