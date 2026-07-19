@@ -44,6 +44,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
  * @property-read Collection<int, Garden> $gardens
+ * @property-read Collection<int, PlantSpecies> $createdPlantSpecies
+ * @property-read Collection<int, PlantVariety> $createdPlantVarieties
  */
 #[Fillable([
     'name',
@@ -99,5 +101,21 @@ class User extends Authenticatable implements PasskeyUser
     public function gardens(): HasMany
     {
         return $this->hasMany(Garden::class);
+    }
+
+    /**
+     * @return HasMany<PlantSpecies, $this>
+     */
+    public function createdPlantSpecies(): HasMany
+    {
+        return $this->hasMany(PlantSpecies::class, 'created_by');
+    }
+
+    /**
+     * @return HasMany<PlantVariety, $this>
+     */
+    public function createdPlantVarieties(): HasMany
+    {
+        return $this->hasMany(PlantVariety::class, 'created_by');
     }
 }

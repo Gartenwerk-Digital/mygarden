@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Http\Requests\Plants;
+
+use App\Models\PlantSpecies;
+use App\Models\PlantVariety;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdatePlantVarietyRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        /** @var PlantVariety $variety */
+        $variety = $this->route('variety');
+
+        return $this->user()->can('update', $variety);
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $data = [];
+
+        if ($this->has('name')) {
+            $name = trim((string) $this->name);
+            $name = trim($name, "'\u{2018}\u{2019}\u{201A}\u{201B}");
+            $data['name'] = $name;
+        }
+
+        foreach (['breeder', 'description'] as $field) {
+            if ($this->has($field)) {
+                $value = trim((string) ($this->$field ?? ''));
+                $data[$field] = $value !== '' ? $value : null;
+            }
+        }
+
+        if (! empty($data)) {
+            $this->merge($data);
+        }
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        /** @var PlantSpecies $species */
+        $species = $this->route('plantSpecies');
+
+        /** @var PlantVariety $variety */
+        $variety = $this->route('variety');
+
+        return [
+            'name' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('plant_varieties', 'name')
+                    ->where('plant_species_id', $species->id)
+                    ->ignore($variety->id),
+            ],
+            'breeder' => ['nullable', 'string', 'max:150'],
+            'year_introduced' => ['nullable', 'integer', 'min:1500', 'max:'.(int) date('Y')],
+            'description' => ['nullable', 'string', 'max:5000'],
+        ];
+    }
+}
