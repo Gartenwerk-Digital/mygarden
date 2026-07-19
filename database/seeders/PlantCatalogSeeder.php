@@ -3,14 +3,17 @@
 namespace Database\Seeders;
 
 use App\Enums\CatalogOrigin;
+use App\Enums\CatalogStatus;
 use App\Enums\MoistureLevel;
 use App\Enums\PlantCategory;
 use App\Enums\PlantLifecycle;
 use App\Enums\SoilType;
 use App\Enums\SunExposure;
+use App\Enums\UserRole;
 use App\Models\PlantSpecies;
 use App\Models\PlantVariety;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,33 +21,51 @@ class PlantCatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        $demoUser = $this->resolveDemoUser();
+        $demoUser = $this->resolveLocalUser();
 
         $this->seedSystemSpecies();
         $this->seedCommunitySpecies($demoUser);
+
+        if (app()->isLocal()) {
+            $this->seedLocalDemoVariants($demoUser);
+        }
     }
 
-    private function resolveDemoUser(): User
+    private function resolveLocalUser(): User
     {
-        $existing = User::where('email', '!=', '')->first();
+        if (app()->isLocal()) {
+            $user = Model::unguarded(fn () => User::updateOrCreate(
+                ['email' => 'chrisganzert@gmail.com'],
+                [
+                    'name' => 'Chris Ganzert',
+                    'username' => 'chrispuh',
+                    'password' => Hash::make('password'),
+                    'role' => UserRole::Admin->value,
+                    'email_verified_at' => now(),
+                    'terms_accepted_at' => now(),
+                ],
+            ));
+
+            return $user;
+        }
+
+        $existing = User::whereNotNull('email')->first();
 
         if ($existing !== null) {
             return $existing;
         }
 
-        return User::factory()->create([
+        return Model::unguarded(fn () => User::factory()->create([
             'name' => 'Demo-Gärtnerin',
             'username' => 'demo_gaertnerin',
             'email' => 'demo@mygarden.local',
             'password' => Hash::make('password'),
-        ]);
+        ]));
     }
 
     private function seedSystemSpecies(): void
     {
-        $specs = $this->systemSpeciesData();
-
-        foreach ($specs as $spec) {
+        foreach ($this->systemSpeciesData() as $spec) {
             $varieties = $spec['varieties'] ?? [];
             unset($spec['varieties']);
 
@@ -55,10 +76,11 @@ class PlantCatalogSeeder extends Seeder
                 ? ['botanical_name' => $spec['botanical_name']]
                 : ['common_name' => $spec['common_name'], 'origin' => CatalogOrigin::System->value];
 
-            $species = PlantSpecies::updateOrCreate($key, array_merge($spec, [
+            $species = Model::unguarded(fn () => PlantSpecies::updateOrCreate($key, array_merge($spec, [
                 'origin' => CatalogOrigin::System->value,
+                'catalog_status' => CatalogStatus::Approved->value,
                 'created_by' => null,
-            ]));
+            ])));
 
             if ($archived && $species->archived_at === null) {
                 $species->forceFill(['archived_at' => now()])->save();
@@ -78,13 +100,69 @@ class PlantCatalogSeeder extends Seeder
                 ? ['botanical_name' => $spec['botanical_name']]
                 : ['common_name' => $spec['common_name'], 'origin' => CatalogOrigin::User->value];
 
-            $species = PlantSpecies::updateOrCreate($key, array_merge($spec, [
+            Model::unguarded(fn () => PlantSpecies::updateOrCreate($key, array_merge($spec, [
                 'origin' => CatalogOrigin::User->value,
+                'catalog_status' => CatalogStatus::Approved->value,
                 'created_by' => $user->id,
-            ]));
-
-            $this->seedVarieties($species, $varieties);
+            ])));
         }
+    }
+
+    private function seedLocalDemoVariants(User $user): void
+    {
+        $species = Model::unguarded(fn () => PlantSpecies::firstOrCreate(
+            ['common_name' => '[Demo] Privater Eintrag', 'origin' => CatalogOrigin::User->value, 'created_by' => $user->id],
+            [
+                'catalog_status' => CatalogStatus::Private->value,
+                'category' => PlantCategory::Herb->value,
+                'description' => 'Lokaler Demo-Eintrag mit Status privat.',
+                'sun_exposures' => null,
+                'soil_types' => null,
+                'moisture_levels' => null,
+            ],
+        ));
+
+        Model::unguarded(fn () => PlantVariety::firstOrCreate(
+            ['plant_species_id' => $species->id, 'name' => 'Demo-Private-Sorte'],
+            [
+                'origin' => CatalogOrigin::User->value,
+                'catalog_status' => CatalogStatus::Private->value,
+                'created_by' => $user->id,
+            ],
+        ));
+
+        Model::unguarded(fn () => PlantSpecies::firstOrCreate(
+            ['common_name' => '[Demo] In Prüfung', 'origin' => CatalogOrigin::User->value, 'created_by' => $user->id],
+            [
+                'catalog_status' => CatalogStatus::PendingReview->value,
+                'category' => PlantCategory::Flower->value,
+                'description' => 'Lokaler Demo-Eintrag mit Status in Prüfung.',
+                'sun_exposures' => null,
+                'soil_types' => null,
+                'moisture_levels' => null,
+            ],
+        ));
+
+        $rejectedSpecies = Model::unguarded(fn () => PlantSpecies::firstOrCreate(
+            ['common_name' => '[Demo] Abgelehnt', 'origin' => CatalogOrigin::User->value, 'created_by' => $user->id],
+            [
+                'catalog_status' => CatalogStatus::Rejected->value,
+                'category' => PlantCategory::Vegetable->value,
+                'description' => 'Lokaler Demo-Eintrag mit Status abgelehnt.',
+                'sun_exposures' => null,
+                'soil_types' => null,
+                'moisture_levels' => null,
+            ],
+        ));
+
+        Model::unguarded(fn () => PlantVariety::firstOrCreate(
+            ['plant_species_id' => $rejectedSpecies->id, 'name' => 'Demo-Rejected-Sorte'],
+            [
+                'origin' => CatalogOrigin::User->value,
+                'catalog_status' => CatalogStatus::Rejected->value,
+                'created_by' => $user->id,
+            ],
+        ));
     }
 
     /**
@@ -99,14 +177,15 @@ class PlantCatalogSeeder extends Seeder
             $createdBy = $vSpec['created_by'] ?? null;
             unset($vSpec['created_by']);
 
-            $variety = PlantVariety::updateOrCreate(
+            $variety = Model::unguarded(fn () => PlantVariety::updateOrCreate(
                 ['plant_species_id' => $species->id, 'name' => $vSpec['name']],
                 array_merge($vSpec, [
                     'plant_species_id' => $species->id,
                     'origin' => $createdBy !== null ? CatalogOrigin::User->value : CatalogOrigin::System->value,
+                    'catalog_status' => CatalogStatus::Approved->value,
                     'created_by' => $createdBy,
                 ]),
-            );
+            ));
 
             if ($archived && $variety->archived_at === null) {
                 $variety->forceFill(['archived_at' => now()])->save();

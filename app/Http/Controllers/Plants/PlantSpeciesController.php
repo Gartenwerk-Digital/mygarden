@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Plants;
 use App\Actions\Plants\ArchivePlantSpecies;
 use App\Actions\Plants\CreatePlantSpecies;
 use App\Actions\Plants\DeletePlantSpecies;
+use App\Actions\Plants\SubmitPlantSpeciesForReview;
 use App\Actions\Plants\UnarchivePlantSpecies;
 use App\Actions\Plants\UpdatePlantSpecies;
+use App\Actions\Plants\WithdrawPlantSpeciesSubmission;
 use App\Enums\MoistureLevel;
 use App\Enums\PlantCategory;
 use App\Enums\PlantLifecycle;
 use App\Enums\SoilType;
 use App\Enums\SunExposure;
+use App\Exceptions\CatalogActionException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Plants\StorePlantSpeciesRequest;
 use App\Http\Requests\Plants\UpdatePlantSpeciesRequest;
@@ -25,11 +28,23 @@ use Inertia\Response;
 
 class PlantSpeciesController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        $user = $request->user();
         $search = trim((string) $request->get('search', ''));
         $category = $request->get('category');
-        $status = $request->get('status', 'active');
+        $scope = $request->get('scope', 'catalog');
+        $catalogStatus = $request->get('catalog_status');
+
+        // Validate scope; moderators can access 'review', others cannot
+        $allowedScopes = ['catalog', 'mine', 'archived'];
+        if ($scope === 'review') {
+            if (! Gate::check('moderate-catalog')) {
+                abort(403);
+            }
+        } elseif (! in_array($scope, $allowedScopes, strict: true)) {
+            $scope = 'catalog';
+        }
 
         $query = PlantSpecies::query()
             ->when($search !== '', fn ($q) => $q->where(function ($q) use ($search): void {
@@ -43,10 +58,15 @@ class PlantSpeciesController extends Controller
                 fn ($q) => $q->where('category', $category),
             );
 
-        if ($status === 'archived') {
-            $query->whereNotNull('archived_at')->where('created_by', $request->user()->id);
-        } else {
-            $query->whereNull('archived_at');
+        match ($scope) {
+            'catalog' => $query->whereNull('archived_at')->visibleTo($user),
+            'mine' => $query->whereNull('archived_at')->where('created_by', $user->id),
+            'archived' => $query->whereNotNull('archived_at')->where('created_by', $user->id),
+            'review' => $query->whereNull('archived_at')->where('origin', 'user')->where('catalog_status', 'pending_review'),
+        };
+
+        if ($scope === 'mine' && $catalogStatus !== null && $catalogStatus !== '') {
+            $query->where('catalog_status', $catalogStatus);
         }
 
         $species = $query->orderBy('common_name')->paginate(24)->withQueryString();
@@ -56,10 +76,12 @@ class PlantSpeciesController extends Controller
             'filters' => [
                 'search' => $search !== '' ? $search : null,
                 'category' => $category,
-                'status' => $status,
+                'scope' => $scope,
+                'catalog_status' => $catalogStatus,
             ],
             'categories' => collect(PlantCategory::cases())->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
             'lifecycles' => collect(PlantLifecycle::cases())->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
+            'canModerateCatalog' => Gate::check('moderate-catalog'),
         ]);
     }
 
@@ -79,7 +101,7 @@ class PlantSpeciesController extends Controller
         try {
             $species = $action->handle($request->user(), $request->validated());
         } catch (UniqueConstraintViolationException) {
-            return back()->withErrors(['botanical_name' => 'Dieser botanische Name ist bereits vergeben.'])->withInput();
+            return back()->withErrors(['botanical_name' => 'Dieser botanische Name ist bereits im Katalog erfasst oder wird derzeit geprüft.'])->withInput();
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pflanzenart erstellt.')]);
@@ -91,13 +113,15 @@ class PlantSpeciesController extends Controller
     {
         Gate::authorize('view', $plantSpecies);
 
+        $user = $request->user();
+
         $plantSpecies->load([
-            'varieties' => fn ($q) => $q->whereNull('archived_at')->orderBy('name'),
+            'varieties' => fn ($q) => $q->whereNull('archived_at')->visibleTo($user)->orderBy('name'),
         ]);
 
         $archivedVarieties = $plantSpecies->varieties()
             ->whereNotNull('archived_at')
-            ->where('created_by', $request->user()->id)
+            ->where('created_by', $user->id)
             ->orderBy('name')
             ->get();
 
@@ -131,7 +155,7 @@ class PlantSpeciesController extends Controller
         try {
             $action->handle($plantSpecies, $request->validated());
         } catch (UniqueConstraintViolationException) {
-            return back()->withErrors(['botanical_name' => 'Dieser botanische Name ist bereits vergeben.'])->withInput();
+            return back()->withErrors(['botanical_name' => 'Dieser botanische Name ist bereits im Katalog erfasst oder wird derzeit geprüft.'])->withInput();
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pflanzenart aktualisiert.')]);
@@ -143,7 +167,11 @@ class PlantSpeciesController extends Controller
     {
         Gate::authorize('archive', $plantSpecies);
 
-        $action->handle($plantSpecies);
+        try {
+            $action->handle($plantSpecies);
+        } catch (CatalogActionException $e) {
+            return back()->withErrors(['action' => $e->getMessage()]);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pflanzenart archiviert.')]);
 
@@ -165,10 +193,44 @@ class PlantSpeciesController extends Controller
     {
         Gate::authorize('delete', $plantSpecies);
 
-        $action->handle($plantSpecies);
+        try {
+            $action->handle($plantSpecies);
+        } catch (CatalogActionException $e) {
+            return back()->withErrors(['action' => $e->getMessage()]);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pflanzenart gelöscht.')]);
 
         return to_route('plants.index');
+    }
+
+    public function submit(PlantSpecies $plantSpecies, SubmitPlantSpeciesForReview $action): RedirectResponse
+    {
+        Gate::authorize('submitForReview', $plantSpecies);
+
+        try {
+            $action->handle($plantSpecies);
+        } catch (CatalogActionException $e) {
+            return back()->withErrors(['action' => $e->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Pflanzenart zur Prüfung eingereicht.')]);
+
+        return to_route('plants.show', $plantSpecies);
+    }
+
+    public function withdraw(PlantSpecies $plantSpecies, WithdrawPlantSpeciesSubmission $action): RedirectResponse
+    {
+        Gate::authorize('withdrawSubmission', $plantSpecies);
+
+        try {
+            $action->handle($plantSpecies);
+        } catch (CatalogActionException $e) {
+            return back()->withErrors(['action' => $e->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Einreichung zurückgezogen.')]);
+
+        return to_route('plants.show', $plantSpecies);
     }
 }

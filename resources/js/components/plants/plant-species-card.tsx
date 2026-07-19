@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Archive } from 'lucide-react';
 
 import { show } from '@/actions/App/Http/Controllers/Plants/PlantSpeciesController';
+import { CatalogStatusBadge } from '@/components/plants/catalog-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { plantCategoryIcons } from '@/lib/plant-icons';
@@ -11,12 +12,14 @@ type Props = {
     plantSpecies: PlantSpecies;
     categories: EnumOption[];
     lifecycles: EnumOption[];
+    currentUserId?: number;
 };
 
 export function PlantSpeciesCard({
     plantSpecies,
     categories,
     lifecycles,
+    currentUserId,
 }: Props) {
     const Icon = plantCategoryIcons[plantSpecies.category];
     const categoryLabel =
@@ -25,6 +28,11 @@ export function PlantSpeciesCard({
     const lifecycleLabel = plantSpecies.lifecycle
         ? lifecycles.find((l) => l.value === plantSpecies.lifecycle)?.label
         : null;
+    const isOwnEntry =
+        plantSpecies.origin === 'user' &&
+        plantSpecies.created_by === currentUserId;
+    const showStatusBadge =
+        isOwnEntry && plantSpecies.catalog_status !== 'approved';
 
     return (
         <Link
@@ -62,6 +70,12 @@ export function PlantSpeciesCard({
                             <Badge variant="outline" className="text-xs">
                                 {lifecycleLabel}
                             </Badge>
+                        )}
+                        {showStatusBadge && (
+                            <CatalogStatusBadge
+                                status={plantSpecies.catalog_status}
+                                className="text-xs"
+                            />
                         )}
                     </div>
                     {plantSpecies.archived_at && (

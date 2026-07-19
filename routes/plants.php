@@ -13,6 +13,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::patch('plants/{plantSpecies}', [PlantSpeciesController::class, 'update'])->name('plants.update');
     Route::patch('plants/{plantSpecies}/archive', [PlantSpeciesController::class, 'archive'])->name('plants.archive');
     Route::patch('plants/{plantSpecies}/unarchive', [PlantSpeciesController::class, 'unarchive'])->name('plants.unarchive');
+    Route::patch('plants/{plantSpecies}/submit', [PlantSpeciesController::class, 'submit'])->name('plants.submit');
+    Route::patch('plants/{plantSpecies}/withdraw', [PlantSpeciesController::class, 'withdraw'])->name('plants.withdraw');
     Route::delete('plants/{plantSpecies}', [PlantSpeciesController::class, 'destroy'])->name('plants.destroy');
 
     Route::scopeBindings()->group(function (): void {
@@ -22,6 +24,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::patch('plants/{plantSpecies}/varieties/{variety}', [PlantVarietyController::class, 'update'])->name('plants.varieties.update');
         Route::patch('plants/{plantSpecies}/varieties/{variety}/archive', [PlantVarietyController::class, 'archive'])->name('plants.varieties.archive');
         Route::patch('plants/{plantSpecies}/varieties/{variety}/unarchive', [PlantVarietyController::class, 'unarchive'])->name('plants.varieties.unarchive');
+        Route::patch('plants/{plantSpecies}/varieties/{variety}/submit', [PlantVarietyController::class, 'submit'])->name('plants.varieties.submit');
+        Route::patch('plants/{plantSpecies}/varieties/{variety}/withdraw', [PlantVarietyController::class, 'withdraw'])->name('plants.varieties.withdraw');
         Route::delete('plants/{plantSpecies}/varieties/{variety}', [PlantVarietyController::class, 'destroy'])->name('plants.varieties.destroy');
     });
 });

@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\CatalogOrigin;
+use App\Enums\CatalogStatus;
 use Database\Factories\PlantVarietyFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $plant_species_id
  * @property CatalogOrigin $origin
+ * @property CatalogStatus $catalog_status
  * @property int|null $created_by
  * @property string $name
  * @property string|null $breeder
@@ -30,8 +33,6 @@ class PlantVariety extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'origin',
-        'created_by',
         'name',
         'breeder',
         'year_introduced',
@@ -42,6 +43,7 @@ class PlantVariety extends Model
     {
         return [
             'origin' => CatalogOrigin::class,
+            'catalog_status' => CatalogStatus::class,
             'archived_at' => 'datetime',
         ];
     }
@@ -49,6 +51,47 @@ class PlantVariety extends Model
     public function isArchived(): bool
     {
         return $this->archived_at !== null;
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        if ($this->archived_at !== null) {
+            return $user->id === $this->created_by;
+        }
+
+        if ($this->origin === CatalogOrigin::System) {
+            return $this->catalog_status === CatalogStatus::Approved;
+        }
+
+        if ($user->id === $this->created_by) {
+            return true;
+        }
+
+        if ($this->catalog_status === CatalogStatus::Approved) {
+            return true;
+        }
+
+        if ($this->catalog_status === CatalogStatus::PendingReview) {
+            return $user->canModerateCatalog();
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  Builder<PlantVariety>  $query
+     */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        $query->where(function (Builder $q) use ($user): void {
+            $q->where(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::System->value)->where('catalog_status', CatalogStatus::Approved->value))
+                ->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('created_by', $user->id))
+                ->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('catalog_status', CatalogStatus::Approved->value));
+
+            if ($user->canModerateCatalog()) {
+                $q->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('catalog_status', CatalogStatus::PendingReview->value));
+            }
+        });
     }
 
     /**

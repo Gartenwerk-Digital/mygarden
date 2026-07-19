@@ -18,11 +18,15 @@ export type PlantLifecycle = 'annual' | 'biennial' | 'perennial';
 
 export type CatalogOrigin = 'system' | 'user';
 
+export type CatalogStatus =
+    'private' | 'pending_review' | 'approved' | 'rejected';
+
 export type EnumOption = { value: string; label: string };
 
 export type PlantSpecies = {
     id: number;
     origin: CatalogOrigin;
+    catalog_status: CatalogStatus;
     created_by: number | null;
     common_name: string;
     botanical_name: string | null;
@@ -51,6 +55,7 @@ export type PlantVariety = {
     id: number;
     plant_species_id: number;
     origin: CatalogOrigin;
+    catalog_status: CatalogStatus;
     created_by: number | null;
     name: string;
     breeder: string | null;
