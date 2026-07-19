@@ -69,14 +69,14 @@ test('archived species are not shown in active index', function () {
         ->assertInertia(fn ($page) => $page->has('species.data', 1));
 });
 
-test('status=archived shows only own archived species', function () {
+test('scope=archived shows only own archived species', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
     PlantSpecies::factory()->forUser($user)->archived()->create(['common_name' => 'Eigene archiviert']);
     PlantSpecies::factory()->forUser($other)->archived()->create(['common_name' => 'Fremde archiviert']);
 
     $this->actingAs($user)
-        ->get(route('plants.index', ['status' => 'archived']))
+        ->get(route('plants.index', ['scope' => 'archived']))
         ->assertInertia(fn ($page) => $page
             ->has('species.data', 1)
             ->where('species.data.0.common_name', 'Eigene archiviert')
@@ -356,7 +356,8 @@ test('species with active variety cannot be archived', function () {
 
     $this->actingAs($user)
         ->patch(route('plants.archive', $species))
-        ->assertForbidden();
+        ->assertRedirect()
+        ->assertSessionHasErrors('action');
 });
 
 test('species with archived variety cannot be archived', function () {
@@ -366,7 +367,8 @@ test('species with archived variety cannot be archived', function () {
 
     $this->actingAs($user)
         ->patch(route('plants.archive', $species))
-        ->assertForbidden();
+        ->assertRedirect()
+        ->assertSessionHasErrors('action');
 });
 
 test('creator can unarchive own species', function () {
@@ -400,7 +402,8 @@ test('species with active variety cannot be soft deleted', function () {
 
     $this->actingAs($user)
         ->delete(route('plants.destroy', $species))
-        ->assertForbidden();
+        ->assertRedirect()
+        ->assertSessionHasErrors('action');
 });
 
 test('species with archived variety cannot be soft deleted', function () {
@@ -410,7 +413,8 @@ test('species with archived variety cannot be soft deleted', function () {
 
     $this->actingAs($user)
         ->delete(route('plants.destroy', $species))
-        ->assertForbidden();
+        ->assertRedirect()
+        ->assertSessionHasErrors('action');
 });
 
 test('species can be soft deleted after all varieties are soft deleted', function () {
