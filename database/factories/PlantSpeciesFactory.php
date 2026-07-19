@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\CatalogOrigin;
+use App\Enums\CatalogStatus;
 use App\Enums\PlantCategory;
 use App\Models\PlantSpecies;
 use App\Models\User;
@@ -38,6 +39,7 @@ class PlantSpeciesFactory extends Factory
     {
         return $this->state([
             'origin' => CatalogOrigin::System->value,
+            'catalog_status' => CatalogStatus::Approved->value,
             'created_by' => null,
         ]);
     }
@@ -46,8 +48,24 @@ class PlantSpeciesFactory extends Factory
     {
         return $this->state([
             'origin' => CatalogOrigin::User->value,
+            'catalog_status' => CatalogStatus::Private->value,
             'created_by' => $user->id,
         ]);
+    }
+
+    public function approved(): static
+    {
+        return $this->state(['catalog_status' => CatalogStatus::Approved->value]);
+    }
+
+    public function pendingReview(): static
+    {
+        return $this->state(['catalog_status' => CatalogStatus::PendingReview->value]);
+    }
+
+    public function rejected(): static
+    {
+        return $this->state(['catalog_status' => CatalogStatus::Rejected->value]);
     }
 
     public function archived(): static

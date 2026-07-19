@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ProfileVisibility;
 use App\Enums\TeamRole;
+use App\Enums\UserRole;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,6 +27,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'role' => UserRole::User,
             'name' => fake()->name(),
             'username' => 'user'.fake()->unique()->numberBetween(1000, 99999999),
             'email' => fake()->unique()->safeEmail(),
