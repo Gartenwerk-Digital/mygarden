@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Plants;
 use App\Actions\Plants\ArchivePlantVariety;
 use App\Actions\Plants\CreatePlantVariety;
 use App\Actions\Plants\DeletePlantVariety;
+use App\Actions\Plants\SubmitPlantVarietyForReview;
 use App\Actions\Plants\UnarchivePlantVariety;
 use App\Actions\Plants\UpdatePlantVariety;
+use App\Actions\Plants\WithdrawPlantVarietySubmission;
+use App\Exceptions\CatalogActionException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Plants\StorePlantVarietyRequest;
 use App\Http\Requests\Plants\UpdatePlantVarietyRequest;
@@ -85,6 +88,36 @@ class PlantVarietyController extends Controller
         $action->handle($variety);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Sorte gelöscht.')]);
+
+        return to_route('plants.show', $plantSpecies);
+    }
+
+    public function submit(PlantSpecies $plantSpecies, PlantVariety $variety, SubmitPlantVarietyForReview $action): RedirectResponse
+    {
+        Gate::authorize('submitForReview', $variety);
+
+        try {
+            $action->handle($variety);
+        } catch (CatalogActionException $e) {
+            return back()->withErrors(['action' => $e->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Sorte zur Prüfung eingereicht.')]);
+
+        return to_route('plants.show', $plantSpecies);
+    }
+
+    public function withdraw(PlantSpecies $plantSpecies, PlantVariety $variety, WithdrawPlantVarietySubmission $action): RedirectResponse
+    {
+        Gate::authorize('withdrawSubmission', $variety);
+
+        try {
+            $action->handle($variety);
+        } catch (CatalogActionException $e) {
+            return back()->withErrors(['action' => $e->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Einreichung zurückgezogen.')]);
 
         return to_route('plants.show', $plantSpecies);
     }

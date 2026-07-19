@@ -66,6 +66,16 @@ class StorePlantSpeciesRequest extends FormRequest
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'botanical_name.unique' => 'Dieser botanische Name ist bereits im Katalog erfasst oder wird derzeit geprüft.',
+        ];
+    }
+
+    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array

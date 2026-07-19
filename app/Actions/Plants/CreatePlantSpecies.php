@@ -3,6 +3,7 @@
 namespace App\Actions\Plants;
 
 use App\Enums\CatalogOrigin;
+use App\Enums\CatalogStatus;
 use App\Models\PlantSpecies;
 use App\Models\User;
 
@@ -13,12 +14,12 @@ class CreatePlantSpecies
      */
     public function handle(User $user, array $validated): PlantSpecies
     {
-        /** @var PlantSpecies $species */
-        $species = PlantSpecies::create([
-            ...$validated,
+        $species = new PlantSpecies($validated);
+        $species->forceFill([
             'origin' => CatalogOrigin::User->value,
             'created_by' => $user->id,
-        ]);
+            'catalog_status' => CatalogStatus::Private->value,
+        ])->save();
 
         return $species;
     }
