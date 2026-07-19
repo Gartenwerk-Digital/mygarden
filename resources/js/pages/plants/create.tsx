@@ -1,4 +1,5 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Info } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 
 import {
@@ -52,6 +53,20 @@ export default function PlantsCreate({
 
             <div className="p-4 md:p-6">
                 <PageHeader title="Pflanze anlegen" className="mb-6" />
+
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                    <Info className="mt-0.5 size-4 shrink-0" />
+                    <span>
+                        Dein Eintrag wird zunächst privat angelegt.{' '}
+                        <Link
+                            href={index().url}
+                            className="underline hover:text-foreground"
+                        >
+                            Suche zuerst im Katalog
+                        </Link>
+                        , ob diese Pflanze bereits vorhanden ist.
+                    </span>
+                </div>
 
                 <div className="max-w-2xl">
                     <PlantSpeciesForm

@@ -7,8 +7,10 @@ import {
     Pencil,
     Plus,
     Ruler,
+    Send,
     Sun,
     Trash2,
+    Undo2,
 } from 'lucide-react';
 
 import {
@@ -17,7 +19,9 @@ import {
     edit,
     index,
     show,
+    submit,
     unarchive,
+    withdraw,
 } from '@/actions/App/Http/Controllers/Plants/PlantSpeciesController';
 import {
     archive as archiveVariety,
@@ -28,6 +32,7 @@ import {
 } from '@/actions/App/Http/Controllers/Plants/PlantVarietyController';
 import { EmptyState } from '@/components/mygarden/empty-state';
 import { PageHeader } from '@/components/mygarden/page-header';
+import { CatalogStatusBadge } from '@/components/plants/catalog-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Auth } from '@/types/auth';
@@ -57,7 +62,13 @@ export default function PlantsShow({
 
     const isOwner =
         plantSpecies.origin === 'user' && plantSpecies.created_by === userId;
-    const canEdit = isOwner;
+    const isEditableStatus =
+        plantSpecies.catalog_status === 'private' ||
+        plantSpecies.catalog_status === 'rejected';
+    const canEdit = isOwner && isEditableStatus;
+    const canSubmit = isOwner && isEditableStatus && !plantSpecies.archived_at;
+    const canWithdraw =
+        isOwner && plantSpecies.catalog_status === 'pending_review';
     const varieties = plantSpecies.varieties ?? [];
 
     const labelFor = (
@@ -68,6 +79,16 @@ export default function PlantsShow({
 
     const handleArchive = () => router.patch(archive(plantSpecies).url);
     const handleUnarchive = () => router.patch(unarchive(plantSpecies).url);
+    const handleSubmit = () => router.patch(submit(plantSpecies).url);
+    const handleWithdraw = () => {
+        if (
+            window.confirm(
+                'Einreichung zurückziehen? Der Eintrag wird wieder privat.',
+            )
+        ) {
+            router.patch(withdraw(plantSpecies).url);
+        }
+    };
     const handleDelete = () => {
         if (
             window.confirm(
@@ -121,6 +142,26 @@ export default function PlantsShow({
                                         Archivieren
                                     </Button>
                                 ))}
+                            {canSubmit && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleSubmit}
+                                >
+                                    <Send className="mr-2 size-4" />
+                                    Zur Prüfung einreichen
+                                </Button>
+                            )}
+                            {canWithdraw && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleWithdraw}
+                                >
+                                    <Undo2 className="mr-2 size-4" />
+                                    Einreichung zurückziehen
+                                </Button>
+                            )}
                             {canEdit && (
                                 <Button
                                     variant="destructive"
@@ -139,6 +180,15 @@ export default function PlantsShow({
                     <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
                         <Archive className="size-4 shrink-0" />
                         <span>Diese Pflanzenart ist archiviert.</span>
+                    </div>
+                )}
+
+                {isOwner && plantSpecies.catalog_status === 'approved' && (
+                    <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                        <span>
+                            Dieser Eintrag wurde freigegeben und kann nicht mehr
+                            bearbeitet werden.
+                        </span>
                     </div>
                 )}
 
@@ -162,6 +212,11 @@ export default function PlantsShow({
                                 ? 'System'
                                 : 'Community'}
                         </Badge>
+                        {isOwner && (
+                            <CatalogStatusBadge
+                                status={plantSpecies.catalog_status}
+                            />
+                        )}
                     </div>
 
                     {plantSpecies.botanical_name && (
@@ -315,6 +370,10 @@ function VarietyList({
             {varieties.map((variety) => {
                 const isVarietyOwner =
                     variety.origin === 'user' && variety.created_by === userId;
+                const isVarietyEditable =
+                    isVarietyOwner &&
+                    (variety.catalog_status === 'private' ||
+                        variety.catalog_status === 'rejected');
 
                 return (
                     <li
@@ -322,14 +381,23 @@ function VarietyList({
                         className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div className="space-y-0.5">
-                            <p className="text-sm font-medium">
-                                '{variety.name}'
-                                {variety.archived_at && (
-                                    <span className="ml-2 text-xs text-muted-foreground">
-                                        (archiviert)
-                                    </span>
-                                )}
-                            </p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium">
+                                    '{variety.name}'
+                                    {variety.archived_at && (
+                                        <span className="ml-2 text-xs text-muted-foreground">
+                                            (archiviert)
+                                        </span>
+                                    )}
+                                </p>
+                                {isVarietyOwner &&
+                                    variety.catalog_status !== 'approved' && (
+                                        <CatalogStatusBadge
+                                            status={variety.catalog_status}
+                                            className="text-xs"
+                                        />
+                                    )}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 {[
                                     variety.breeder,
@@ -342,7 +410,7 @@ function VarietyList({
                             </p>
                         </div>
 
-                        {isVarietyOwner && (
+                        {isVarietyEditable && (
                             <div className="flex shrink-0 items-center gap-2">
                                 <Button asChild variant="ghost" size="sm">
                                     <Link

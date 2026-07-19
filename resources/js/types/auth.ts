@@ -1,5 +1,8 @@
+export type UserRole = 'user' | 'moderator' | 'admin';
+
 export type User = {
     id: number;
+    role: UserRole;
     name: string;
     username: string;
     username_changed_at: string | null;

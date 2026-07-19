@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Leaf, Plus, Search } from 'lucide-react';
 import { useRef } from 'react';
 import type { FormEventHandler } from 'react';
@@ -20,13 +20,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import type { Auth } from '@/types/auth';
 import type { EnumOption, PlantSpecies } from '@/types/plant';
 import type { Paginator } from '@/types/ui';
+
+type Scope = 'catalog' | 'mine' | 'archived' | 'review';
 
 type Filters = {
     search: string | null;
     category: string | null;
-    status: string;
+    scope: Scope;
+    catalog_status: string | null;
 };
 
 type PageProps = {
@@ -34,6 +38,7 @@ type PageProps = {
     filters: Filters;
     categories: EnumOption[];
     lifecycles: EnumOption[];
+    canModerateCatalog: boolean;
 };
 
 export default function PlantsIndex({
@@ -41,43 +46,44 @@ export default function PlantsIndex({
     filters,
     categories,
     lifecycles,
+    canModerateCatalog,
 }: PageProps) {
+    const { auth } = usePage<{ auth: Auth }>().props;
+    const currentUserId = auth.user?.id;
     const formRef = useRef<HTMLFormElement>(null);
 
-    const handleCategoryChange = (value: string) => {
-        const params: Record<string, string> = {};
-
-        if (filters.search) {
-            params.search = filters.search;
-        }
-
-        if (value !== 'all') {
-            params.category = value;
-        }
-
-        if (filters.status !== 'active') {
-            params.status = filters.status;
-        }
-
+    const navigate = (params: Record<string, string>) => {
         router.get(index().url, params, { preserveState: true });
     };
 
-    const handleStatusChange = (value: string) => {
-        const params: Record<string, string> = {};
+    const buildParams = (overrides: Record<string, string | null> = {}) => {
+        const base: Record<string, string> = {};
 
         if (filters.search) {
-            params.search = filters.search;
+            base.search = filters.search;
         }
 
         if (filters.category) {
-            params.category = filters.category;
+            base.category = filters.category;
         }
 
-        if (value !== 'active') {
-            params.status = value;
+        if (filters.scope !== 'catalog') {
+            base.scope = filters.scope;
         }
 
-        router.get(index().url, params, { preserveState: true });
+        const merged = { ...base, ...overrides };
+
+        return Object.fromEntries(
+            Object.entries(merged).filter(([, v]) => v !== null && v !== ''),
+        ) as Record<string, string>;
+    };
+
+    const handleCategoryChange = (value: string) => {
+        navigate(buildParams({ category: value === 'all' ? null : value }));
+    };
+
+    const handleScopeChange = (value: string) => {
+        navigate(buildParams({ scope: value === 'catalog' ? null : value }));
     };
 
     const handleSearch: FormEventHandler = (e) => {
@@ -91,24 +97,30 @@ export default function PlantsIndex({
         const search = (
             form.elements.namedItem('search') as HTMLInputElement
         ).value.trim();
-        const params: Record<string, string> = {};
-
-        if (search) {
-            params.search = search;
-        }
-
-        if (filters.category) {
-            params.category = filters.category;
-        }
-
-        if (filters.status !== 'active') {
-            params.status = filters.status;
-        }
-
-        router.get(index().url, params, { preserveState: true });
+        navigate(buildParams({ search: search || null }));
     };
 
     const hasSpecies = species.data.length > 0;
+
+    const emptyTitle = () => {
+        if (filters.search || filters.category) {
+            return 'Keine Pflanzen gefunden';
+        }
+
+        if (filters.scope === 'archived') {
+            return 'Keine archivierten Pflanzen';
+        }
+
+        if (filters.scope === 'mine') {
+            return 'Noch keine eigenen Einträge';
+        }
+
+        if (filters.scope === 'review') {
+            return 'Keine Einreichungen in Prüfung';
+        }
+
+        return 'Katalog ist noch leer';
+    };
 
     return (
         <>
@@ -166,17 +178,21 @@ export default function PlantsIndex({
                     </Select>
 
                     <Select
-                        value={filters.status}
-                        onValueChange={handleStatusChange}
+                        value={filters.scope}
+                        onValueChange={handleScopeChange}
                     >
-                        <SelectTrigger className="w-full sm:w-44">
+                        <SelectTrigger className="w-full sm:w-52">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="active">Aktive</SelectItem>
-                            <SelectItem value="archived">
-                                Meine Archivierten
-                            </SelectItem>
+                            <SelectItem value="catalog">Katalog</SelectItem>
+                            <SelectItem value="mine">Meine Einträge</SelectItem>
+                            <SelectItem value="archived">Archiviert</SelectItem>
+                            {canModerateCatalog && (
+                                <SelectItem value="review">
+                                    In Prüfung
+                                </SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
                 </div>
@@ -184,13 +200,7 @@ export default function PlantsIndex({
                 {!hasSpecies ? (
                     <EmptyState
                         icon={Leaf}
-                        title={
-                            filters.search || filters.category
-                                ? 'Keine Pflanzen gefunden'
-                                : filters.status === 'archived'
-                                  ? 'Keine archivierten Pflanzen'
-                                  : 'Katalog ist noch leer'
-                        }
+                        title={emptyTitle()}
                         description={
                             filters.search || filters.category
                                 ? 'Ändere deine Suche oder den Filter.'
@@ -216,6 +226,7 @@ export default function PlantsIndex({
                                     plantSpecies={s}
                                     categories={categories}
                                     lifecycles={lifecycles}
+                                    currentUserId={currentUserId}
                                 />
                             ))}
                         </div>
