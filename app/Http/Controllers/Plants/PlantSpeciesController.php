@@ -59,6 +59,7 @@ class PlantSpeciesController extends Controller
                 'status' => $status,
             ],
             'categories' => collect(PlantCategory::cases())->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
+            'lifecycles' => collect(PlantLifecycle::cases())->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
         ]);
     }
 
