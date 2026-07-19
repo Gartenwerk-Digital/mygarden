@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,11 +26,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerGates();
     }
 
     /**
      * Configure default behaviors for production-ready applications.
      */
+    protected function registerGates(): void
+    {
+        Gate::define('moderate-catalog', fn (User $user) => $user->canModerateCatalog());
+        Gate::define('manage-users', fn (User $user) => $user->isAdmin());
+    }
+
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);

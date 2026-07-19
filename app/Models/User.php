@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Concerns\HasTeams;
 use App\Enums\ProfileVisibility;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -20,6 +21,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
+ * @property UserRole $role
  * @property string $name
  * @property string $username
  * @property Carbon|null $username_changed_at
@@ -79,7 +81,23 @@ class User extends Authenticatable implements PasskeyUser
             'username_changed_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
             'profile_visibility' => ProfileVisibility::class,
+            'role' => UserRole::class,
         ];
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    public function isModerator(): bool
+    {
+        return $this->role === UserRole::Moderator;
+    }
+
+    public function canModerateCatalog(): bool
+    {
+        return in_array($this->role, [UserRole::Moderator, UserRole::Admin], strict: true);
     }
 
     public function canChangeUsername(): bool
