@@ -77,4 +77,14 @@ class PlantVarietyPolicy
             && $user->id === $variety->created_by
             && $variety->catalog_status === CatalogStatus::PendingReview;
     }
+
+    public function approve(User $user, PlantVariety $variety): bool
+    {
+        return $user->canModerateCatalog();
+    }
+
+    public function reject(User $user, PlantVariety $variety): bool
+    {
+        return $user->canModerateCatalog();
+    }
 }

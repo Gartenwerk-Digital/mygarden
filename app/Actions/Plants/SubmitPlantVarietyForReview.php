@@ -18,6 +18,13 @@ class SubmitPlantVarietyForReview
             throw new CatalogActionException('Die zugehörige Pflanzenart muss zuerst freigegeben sein, bevor die Sorte eingereicht werden kann.');
         }
 
-        $variety->forceFill(['catalog_status' => CatalogStatus::PendingReview->value])->save();
+        $variety->forceFill([
+            'catalog_status' => CatalogStatus::PendingReview->value,
+            'submitted_at' => now(),
+            'reviewed_by' => null,
+            'reviewed_at' => null,
+            'moderation_note' => null,
+            'duplicate_of_id' => null,
+        ])->save();
     }
 }

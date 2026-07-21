@@ -14,6 +14,13 @@ class WithdrawPlantSpeciesSubmission
             throw new CatalogActionException('Nur eingereichte Einträge können zurückgezogen werden.');
         }
 
-        $species->forceFill(['catalog_status' => CatalogStatus::Private->value])->save();
+        $species->forceFill([
+            'catalog_status' => CatalogStatus::Private->value,
+            'submitted_at' => null,
+            'reviewed_by' => null,
+            'reviewed_at' => null,
+            'moderation_note' => null,
+            'duplicate_of_id' => null,
+        ])->save();
     }
 }
