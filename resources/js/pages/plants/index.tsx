@@ -24,7 +24,7 @@ import type { Auth } from '@/types/auth';
 import type { EnumOption, PlantSpecies } from '@/types/plant';
 import type { Paginator } from '@/types/ui';
 
-type Scope = 'catalog' | 'mine' | 'archived' | 'review';
+type Scope = 'catalog' | 'mine' | 'archived';
 
 type Filters = {
     search: string | null;
@@ -38,7 +38,6 @@ type PageProps = {
     filters: Filters;
     categories: EnumOption[];
     lifecycles: EnumOption[];
-    canModerateCatalog: boolean;
 };
 
 export default function PlantsIndex({
@@ -46,10 +45,9 @@ export default function PlantsIndex({
     filters,
     categories,
     lifecycles,
-    canModerateCatalog,
 }: PageProps) {
     const { auth } = usePage<{ auth: Auth }>().props;
-    const currentUserId = auth.user?.id;
+    const currentUserId = auth.user.id;
     const formRef = useRef<HTMLFormElement>(null);
 
     const navigate = (params: Record<string, string>) => {
@@ -113,10 +111,6 @@ export default function PlantsIndex({
 
         if (filters.scope === 'mine') {
             return 'Noch keine eigenen Einträge';
-        }
-
-        if (filters.scope === 'review') {
-            return 'Keine Einreichungen in Prüfung';
         }
 
         return 'Katalog ist noch leer';
@@ -188,11 +182,6 @@ export default function PlantsIndex({
                             <SelectItem value="catalog">Katalog</SelectItem>
                             <SelectItem value="mine">Meine Einträge</SelectItem>
                             <SelectItem value="archived">Archiviert</SelectItem>
-                            {canModerateCatalog && (
-                                <SelectItem value="review">
-                                    In Prüfung
-                                </SelectItem>
-                            )}
                         </SelectContent>
                     </Select>
                 </div>
