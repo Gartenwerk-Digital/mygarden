@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\CatalogOrigin;
+use App\Enums\UserRole;
 use App\Models\PlantSpecies;
 use App\Models\PlantVariety;
+use App\Models\User;
 use Database\Seeders\PlantCatalogSeeder;
 
 beforeEach(function () {
@@ -84,4 +86,40 @@ test('seeder creates species in multiple categories', function () {
         ->toArray();
 
     expect(count($categories))->toBeGreaterThan(3);
+});
+
+test('local dev user chrispuh receives admin role from seeder', function () {
+    $this->app['env'] = 'local';
+
+    $this->seed(PlantCatalogSeeder::class);
+
+    $user = User::where('email', 'chrisganzert@gmail.com')->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->role)->toBe(UserRole::Admin);
+    expect($user->canModerateCatalog())->toBeTrue();
+});
+
+test('local dev user admin can access moderation routes', function () {
+    $this->app['env'] = 'local';
+    $this->seed(PlantCatalogSeeder::class);
+
+    $admin = User::where('email', 'chrisganzert@gmail.com')->first();
+
+    $this->actingAs($admin)
+        ->get(route('moderation.plants.index'))
+        ->assertOk();
+});
+
+test('seeder is idempotent for local dev user – second run does not create duplicate', function () {
+    $this->app['env'] = 'local';
+
+    $this->seed(PlantCatalogSeeder::class);
+    $countAfterFirst = User::where('email', 'chrisganzert@gmail.com')->count();
+
+    $this->seed(PlantCatalogSeeder::class);
+    $countAfterSecond = User::where('email', 'chrisganzert@gmail.com')->count();
+
+    expect($countAfterFirst)->toBe(1);
+    expect($countAfterSecond)->toBe(1);
 });

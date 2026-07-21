@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Enums\UserRole;
+use App\Models\PlantSpecies;
+use App\Models\PlantVariety;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
@@ -132,4 +135,62 @@ test('dashboard does not include or delete other users invitations', function ()
     $this->assertDatabaseHas('team_invitations', [
         'id' => $invitation->id,
     ]);
+});
+
+// --- Moderationshinweis auf dem Dashboard ---
+
+test('regular user does not see moderationStats on dashboard', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('moderationStats', null));
+});
+
+test('moderator sees moderationStats on dashboard', function () {
+    $moderator = User::factory()->create(['role' => UserRole::Moderator->value]);
+
+    $this->actingAs($moderator)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('moderationStats'));
+});
+
+test('admin sees moderationStats on dashboard', function () {
+    $admin = User::factory()->create(['role' => UserRole::Admin->value]);
+
+    $this->actingAs($admin)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('moderationStats'));
+});
+
+test('moderationStats counts are correct', function () {
+    $owner = User::factory()->create();
+    $moderator = User::factory()->create(['role' => UserRole::Moderator->value]);
+
+    PlantSpecies::factory()->forUser($owner)->pendingReview()->create();
+    PlantSpecies::factory()->forUser($owner)->pendingReview()->create();
+    $approvedSpecies = PlantSpecies::factory()->forUser($owner)->approved()->create();
+    PlantVariety::factory()->forUser($owner)->pendingReview()->create(['plant_species_id' => $approvedSpecies->id]);
+    PlantSpecies::factory()->forUser($owner)->create(); // private – not counted
+
+    $this->actingAs($moderator)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('moderationStats.pendingSpeciesCount', 2)
+            ->where('moderationStats.pendingVarietiesCount', 1)
+        );
+});
+
+test('moderationStats shows zero when nothing is pending', function () {
+    $moderator = User::factory()->create(['role' => UserRole::Moderator->value]);
+
+    $this->actingAs($moderator)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('moderationStats.pendingSpeciesCount', 0)
+            ->where('moderationStats.pendingVarietiesCount', 0)
+        );
 });
