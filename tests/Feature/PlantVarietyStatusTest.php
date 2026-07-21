@@ -79,7 +79,7 @@ test('private variety is only visible to its creator in show page', function () 
         );
 });
 
-test('pending_review variety is visible to moderators', function () {
+test('pending_review variety is not shown in catalog to moderators – moderation uses dedicated routes', function () {
     $owner = User::factory()->create();
     $moderator = User::factory()->create(['role' => UserRole::Moderator->value]);
     $species = PlantSpecies::factory()->system()->create();
@@ -88,10 +88,12 @@ test('pending_review variety is visible to moderators', function () {
         'name' => 'In-Prüfung-Sorte',
     ]);
 
+    // Moderators no longer see foreign pending_review varieties in the catalog show page.
+    // They use the dedicated moderation routes instead.
     $this->actingAs($moderator)
         ->get(route('plants.show', $species))
         ->assertInertia(fn ($page) => $page
-            ->has('plantSpecies.varieties', 1)
+            ->has('plantSpecies.varieties', 0)
         );
 });
 

@@ -90,7 +90,22 @@ test('archived species is not visible to moderators', function () {
         ->assertForbidden();
 });
 
-test('scope=review returns only pending_review entries for moderator', function () {
+test('scope=review is no longer supported and falls back to catalog scope', function () {
+    $owner = User::factory()->create();
+    $moderator = User::factory()->create(['role' => UserRole::Moderator->value]);
+    PlantSpecies::factory()->forUser($owner)->pendingReview()->create(['common_name' => 'In Prüfung']);
+    PlantSpecies::factory()->system()->create(['common_name' => 'System']);
+
+    // scope=review is normalised to catalog – pending entry not visible, system entry is
+    $this->actingAs($moderator)
+        ->get(route('plants.index', ['scope' => 'review']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.scope', 'catalog')
+        );
+});
+
+test('moderator accesses review queue via dedicated moderation route', function () {
     $owner = User::factory()->create();
     $moderator = User::factory()->create(['role' => UserRole::Moderator->value]);
     PlantSpecies::factory()->forUser($owner)->pendingReview()->create(['common_name' => 'In Prüfung']);
@@ -98,18 +113,19 @@ test('scope=review returns only pending_review entries for moderator', function 
     PlantSpecies::factory()->system()->create(['common_name' => 'System']);
 
     $this->actingAs($moderator)
-        ->get(route('plants.index', ['scope' => 'review']))
+        ->get(route('moderation.plants.index'))
+        ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('species.data', 1)
             ->where('species.data.0.common_name', 'In Prüfung')
         );
 });
 
-test('scope=review returns 403 for regular users', function () {
+test('moderation route returns 403 for regular users', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('plants.index', ['scope' => 'review']))
+        ->get(route('moderation.plants.index'))
         ->assertForbidden();
 });
 

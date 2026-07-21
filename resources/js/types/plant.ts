@@ -23,6 +23,12 @@ export type CatalogStatus =
 
 export type EnumOption = { value: string; label: string };
 
+export type UserSummary = {
+    id: number;
+    name: string;
+    username: string;
+};
+
 export type PlantSpecies = {
     id: number;
     origin: CatalogOrigin;
@@ -41,15 +47,28 @@ export type PlantSpecies = {
     height_min_cm: number | null;
     height_max_cm: number | null;
     archived_at: string | null;
+    submitted_at: string | null;
+    reviewed_by: number | null;
+    reviewed_at: string | null;
+    moderation_note: string | null;
+    duplicate_of_id: number | null;
     created_at: string;
     updated_at: string;
     varieties?: PlantVariety[];
+    creator: UserSummary | null;
+    reviewer: UserSummary | null;
+    duplicate_of: Pick<PlantSpecies, 'id' | 'common_name'> | null;
 };
 
 export type PlantSpeciesSummary = Pick<
     PlantSpecies,
     'id' | 'common_name' | 'botanical_name' | 'category' | 'archived_at'
 >;
+
+export type ModerationSpeciesSummary = Pick<
+    PlantSpecies,
+    'id' | 'common_name' | 'botanical_name' | 'category' | 'submitted_at'
+> & { creator: UserSummary | null };
 
 export type PlantVariety = {
     id: number;
@@ -62,6 +81,23 @@ export type PlantVariety = {
     year_introduced: number | null;
     description: string | null;
     archived_at: string | null;
+    submitted_at: string | null;
+    reviewed_by: number | null;
+    reviewed_at: string | null;
+    moderation_note: string | null;
+    duplicate_of_id: number | null;
     created_at: string;
     updated_at: string;
+    creator: UserSummary | null;
+    reviewer: UserSummary | null;
+    duplicate_of: Pick<PlantVariety, 'id' | 'name'> | null;
+    species?: Pick<PlantSpecies, 'id' | 'common_name'>;
+};
+
+export type ModerationVarietySummary = Pick<
+    PlantVariety,
+    'id' | 'name' | 'plant_species_id' | 'submitted_at'
+> & {
+    creator: UserSummary | null;
+    species: Pick<PlantSpecies, 'id' | 'common_name'> | null;
 };

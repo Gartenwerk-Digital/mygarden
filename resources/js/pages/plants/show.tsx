@@ -13,6 +13,7 @@ import {
     Undo2,
 } from 'lucide-react';
 
+import { showSpecies as moderationShow } from '@/actions/App/Http/Controllers/Plants/PlantModerationController';
 import {
     archive,
     destroy,
@@ -58,7 +59,8 @@ export default function PlantsShow({
     moistureLevels,
 }: PageProps) {
     const { auth } = usePage<{ auth: Auth }>().props;
-    const userId = auth.user?.id;
+    const userId = auth.user.id;
+    const canModerateCatalog = auth.canModerateCatalog;
 
     const isOwner =
         plantSpecies.origin === 'user' && plantSpecies.created_by === userId;
@@ -182,6 +184,43 @@ export default function PlantsShow({
                         <span>Diese Pflanzenart ist archiviert.</span>
                     </div>
                 )}
+
+                {isOwner && plantSpecies.catalog_status === 'rejected' && (
+                    <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                        <p className="font-medium text-destructive">
+                            Eintrag abgelehnt
+                        </p>
+                        {plantSpecies.moderation_note && (
+                            <p className="mt-1 text-foreground">
+                                {plantSpecies.moderation_note}
+                            </p>
+                        )}
+                        {plantSpecies.duplicate_of && (
+                            <p className="mt-1 text-muted-foreground">
+                                Ähnlicher Eintrag:{' '}
+                                <Link
+                                    href={show(plantSpecies.duplicate_of).url}
+                                    className="underline"
+                                >
+                                    {plantSpecies.duplicate_of.common_name}
+                                </Link>
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {canModerateCatalog &&
+                    plantSpecies.catalog_status === 'pending_review' && (
+                        <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                            <span>Dieser Eintrag wartet auf Prüfung.</span>
+                            <Link
+                                href={moderationShow(plantSpecies).url}
+                                className="ml-auto shrink-0 underline"
+                            >
+                                Zur Moderationsdetailseite
+                            </Link>
+                        </div>
+                    )}
 
                 {isOwner && plantSpecies.catalog_status === 'approved' && (
                     <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
@@ -355,7 +394,7 @@ export default function PlantsShow({
 type VarietyListProps = {
     varieties: PlantVariety[];
     plantSpecies: PlantSpecies;
-    userId: number | undefined;
+    userId: number;
     onDeleteVariety: (variety: PlantVariety) => void;
 };
 
@@ -408,6 +447,25 @@ function VarietyList({
                                     .filter(Boolean)
                                     .join(' · ')}
                             </p>
+                            {isVarietyOwner &&
+                                variety.catalog_status === 'rejected' && (
+                                    <div className="mt-1 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
+                                        <span className="font-medium text-destructive">
+                                            Abgelehnt
+                                        </span>
+                                        {variety.moderation_note && (
+                                            <p className="mt-0.5 text-foreground">
+                                                {variety.moderation_note}
+                                            </p>
+                                        )}
+                                        {variety.duplicate_of && (
+                                            <p className="mt-0.5 text-muted-foreground">
+                                                Ähnliche Sorte: '
+                                                {variety.duplicate_of.name}'
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                         </div>
 
                         {isVarietyEditable && (

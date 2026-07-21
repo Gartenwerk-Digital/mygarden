@@ -21,6 +21,7 @@ export type User = {
 
 export type Auth = {
     user: User;
+    canModerateCatalog: boolean;
 };
 
 /* @chisel-passkeys */

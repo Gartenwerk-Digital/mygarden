@@ -14,6 +14,13 @@ class SubmitPlantSpeciesForReview
             throw new CatalogActionException('Nur private oder abgelehnte Einträge können eingereicht werden.');
         }
 
-        $species->forceFill(['catalog_status' => CatalogStatus::PendingReview->value])->save();
+        $species->forceFill([
+            'catalog_status' => CatalogStatus::PendingReview->value,
+            'submitted_at' => now(),
+            'reviewed_by' => null,
+            'reviewed_at' => null,
+            'moderation_note' => null,
+            'duplicate_of_id' => null,
+        ])->save();
     }
 }

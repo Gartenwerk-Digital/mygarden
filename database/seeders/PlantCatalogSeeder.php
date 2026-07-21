@@ -135,6 +135,7 @@ class PlantCatalogSeeder extends Seeder
             ['common_name' => '[Demo] In Prüfung', 'origin' => CatalogOrigin::User->value, 'created_by' => $user->id],
             [
                 'catalog_status' => CatalogStatus::PendingReview->value,
+                'submitted_at' => now()->subDays(2),
                 'category' => PlantCategory::Flower->value,
                 'description' => 'Lokaler Demo-Eintrag mit Status in Prüfung.',
                 'sun_exposures' => null,
@@ -147,6 +148,10 @@ class PlantCatalogSeeder extends Seeder
             ['common_name' => '[Demo] Abgelehnt', 'origin' => CatalogOrigin::User->value, 'created_by' => $user->id],
             [
                 'catalog_status' => CatalogStatus::Rejected->value,
+                'submitted_at' => now()->subDays(5),
+                'reviewed_by' => $user->id,
+                'reviewed_at' => now()->subDays(3),
+                'moderation_note' => 'Bitte botanischen Namen ergänzen und die Kategorie präzisieren.',
                 'category' => PlantCategory::Vegetable->value,
                 'description' => 'Lokaler Demo-Eintrag mit Status abgelehnt.',
                 'sun_exposures' => null,
@@ -160,6 +165,10 @@ class PlantCatalogSeeder extends Seeder
             [
                 'origin' => CatalogOrigin::User->value,
                 'catalog_status' => CatalogStatus::Rejected->value,
+                'submitted_at' => now()->subDays(5),
+                'reviewed_by' => $user->id,
+                'reviewed_at' => now()->subDays(3),
+                'moderation_note' => 'Diese Sorte existiert bereits unter einem anderen Namen.',
                 'created_by' => $user->id,
             ],
         ));

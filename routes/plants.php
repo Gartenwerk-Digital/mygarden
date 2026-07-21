@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Plants\PlantModerationController;
 use App\Http\Controllers\Plants\PlantSpeciesController;
 use App\Http\Controllers\Plants\PlantVarietyController;
 use Illuminate\Support\Facades\Route;
@@ -27,5 +28,17 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::patch('plants/{plantSpecies}/varieties/{variety}/submit', [PlantVarietyController::class, 'submit'])->name('plants.varieties.submit');
         Route::patch('plants/{plantSpecies}/varieties/{variety}/withdraw', [PlantVarietyController::class, 'withdraw'])->name('plants.varieties.withdraw');
         Route::delete('plants/{plantSpecies}/varieties/{variety}', [PlantVarietyController::class, 'destroy'])->name('plants.varieties.destroy');
+    });
+
+    Route::prefix('moderation/plants')->name('moderation.plants.')->group(function (): void {
+        Route::get('/', [PlantModerationController::class, 'index'])->name('index');
+        Route::get('{plantSpecies}', [PlantModerationController::class, 'showSpecies'])->name('show');
+        Route::patch('{plantSpecies}/approve', [PlantModerationController::class, 'approveSpecies'])->name('approve');
+        Route::patch('{plantSpecies}/reject', [PlantModerationController::class, 'rejectSpecies'])->name('reject');
+        Route::scopeBindings()->group(function (): void {
+            Route::get('{plantSpecies}/varieties/{variety}', [PlantModerationController::class, 'showVariety'])->name('varieties.show');
+            Route::patch('{plantSpecies}/varieties/{variety}/approve', [PlantModerationController::class, 'approveVariety'])->name('varieties.approve');
+            Route::patch('{plantSpecies}/varieties/{variety}/reject', [PlantModerationController::class, 'rejectVariety'])->name('varieties.reject');
+        });
     });
 });

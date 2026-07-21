@@ -1,6 +1,14 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, Leaf, LayoutGrid, Sprout } from 'lucide-react';
+import {
+    BookOpen,
+    FolderGit2,
+    Leaf,
+    LayoutGrid,
+    ShieldCheck,
+    Sprout,
+} from 'lucide-react';
 import { index as gardensIndex } from '@/actions/App/Http/Controllers/Gardens/GardenController';
+import { index as moderationIndex } from '@/actions/App/Http/Controllers/Plants/PlantModerationController';
 import { index as plantsIndex } from '@/actions/App/Http/Controllers/Plants/PlantSpeciesController';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -19,12 +27,13 @@ import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
-    const page = usePage();
+    const page = usePage<{ auth: { canModerateCatalog: boolean } }>();
     const dashboardUrl = page.props.currentTeam
         ? dashboard(page.props.currentTeam.slug)
         : '/';
 
     const currentUrl = page.url;
+    const canModerateCatalog = page.props.auth.canModerateCatalog;
 
     const mainNavItems: NavItem[] = [
         {
@@ -42,8 +51,20 @@ export function AppSidebar() {
             title: 'Pflanzenkatalog',
             href: plantsIndex().url,
             icon: Leaf,
-            isActive: currentUrl.startsWith('/plants'),
+            isActive:
+                currentUrl.startsWith('/plants') &&
+                !currentUrl.startsWith('/moderation'),
         },
+        ...(canModerateCatalog
+            ? [
+                  {
+                      title: 'Moderierung',
+                      href: moderationIndex().url,
+                      icon: ShieldCheck,
+                      isActive: currentUrl.startsWith('/moderation'),
+                  } satisfies NavItem,
+              ]
+            : []),
     ];
 
     const footerNavItems: NavItem[] = [
