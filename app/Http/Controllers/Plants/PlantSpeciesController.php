@@ -57,7 +57,6 @@ class PlantSpeciesController extends Controller
             'catalog' => $query->whereNull('archived_at')->catalogVisibleTo($user),
             'mine' => $query->whereNull('archived_at')->where('created_by', $user->id),
             'archived' => $query->whereNotNull('archived_at')->where('created_by', $user->id),
-            default => $query->whereNull('archived_at')->catalogVisibleTo($user),
         };
 
         if ($scope === 'mine' && $catalogStatus !== null && $catalogStatus !== '') {
