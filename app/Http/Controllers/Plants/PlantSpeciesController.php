@@ -36,13 +36,8 @@ class PlantSpeciesController extends Controller
         $scope = $request->get('scope', 'catalog');
         $catalogStatus = $request->get('catalog_status');
 
-        // Validate scope; moderators can access 'review', others cannot
         $allowedScopes = ['catalog', 'mine', 'archived'];
-        if ($scope === 'review') {
-            if (! Gate::check('moderate-catalog')) {
-                abort(403);
-            }
-        } elseif (! in_array($scope, $allowedScopes, strict: true)) {
+        if (! in_array($scope, $allowedScopes, strict: true)) {
             $scope = 'catalog';
         }
 
@@ -59,10 +54,10 @@ class PlantSpeciesController extends Controller
             );
 
         match ($scope) {
-            'catalog' => $query->whereNull('archived_at')->visibleTo($user),
+            'catalog' => $query->whereNull('archived_at')->catalogVisibleTo($user),
             'mine' => $query->whereNull('archived_at')->where('created_by', $user->id),
             'archived' => $query->whereNotNull('archived_at')->where('created_by', $user->id),
-            'review' => $query->whereNull('archived_at')->where('origin', 'user')->where('catalog_status', 'pending_review'),
+            default => $query->whereNull('archived_at')->catalogVisibleTo($user),
         };
 
         if ($scope === 'mine' && $catalogStatus !== null && $catalogStatus !== '') {
@@ -81,7 +76,6 @@ class PlantSpeciesController extends Controller
             ],
             'categories' => collect(PlantCategory::cases())->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
             'lifecycles' => collect(PlantLifecycle::cases())->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
-            'canModerateCatalog' => Gate::check('moderate-catalog'),
         ]);
     }
 
@@ -116,8 +110,13 @@ class PlantSpeciesController extends Controller
         $user = $request->user();
 
         $plantSpecies->load([
-            'varieties' => fn ($q) => $q->whereNull('archived_at')->visibleTo($user)->orderBy('name'),
+            'varieties' => fn ($q) => $q->whereNull('archived_at')->catalogVisibleTo($user)->orderBy('name'),
         ]);
+
+        // Load duplicate_of only when accessible (not archived, not deleted)
+        if ($plantSpecies->duplicate_of_id !== null) {
+            $plantSpecies->load('duplicateOf:id,common_name');
+        }
 
         $archivedVarieties = $plantSpecies->varieties()
             ->whereNotNull('archived_at')
