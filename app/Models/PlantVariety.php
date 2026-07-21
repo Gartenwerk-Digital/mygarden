@@ -23,9 +23,16 @@ use Illuminate\Support\Carbon;
  * @property int|null $year_introduced
  * @property string|null $description
  * @property Carbon|null $archived_at
+ * @property Carbon|null $submitted_at
+ * @property int|null $reviewed_by
+ * @property Carbon|null $reviewed_at
+ * @property string|null $moderation_note
+ * @property int|null $duplicate_of_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read User|null $reviewer
+ * @property-read PlantVariety|null $duplicateOf
  */
 class PlantVariety extends Model
 {
@@ -45,6 +52,8 @@ class PlantVariety extends Model
             'origin' => CatalogOrigin::class,
             'catalog_status' => CatalogStatus::class,
             'archived_at' => 'datetime',
+            'submitted_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -79,18 +88,18 @@ class PlantVariety extends Model
     }
 
     /**
+     * Scope for catalog display: approved entries + own entries of any status.
+     * Does NOT include foreign pending_review entries — use the moderation routes for those.
+     * The caller is responsible for applying whereNull('archived_at') when needed.
+     *
      * @param  Builder<PlantVariety>  $query
      */
-    public function scopeVisibleTo(Builder $query, User $user): void
+    public function scopeCatalogVisibleTo(Builder $query, User $user): void
     {
         $query->where(function (Builder $q) use ($user): void {
             $q->where(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::System->value)->where('catalog_status', CatalogStatus::Approved->value))
                 ->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('created_by', $user->id))
                 ->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('catalog_status', CatalogStatus::Approved->value));
-
-            if ($user->canModerateCatalog()) {
-                $q->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('catalog_status', CatalogStatus::PendingReview->value));
-            }
         });
     }
 
@@ -108,5 +117,21 @@ class PlantVariety extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /**
+     * @return BelongsTo<PlantVariety, $this>
+     */
+    public function duplicateOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'duplicate_of_id');
     }
 }
