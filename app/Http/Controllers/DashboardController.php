@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CatalogStatus;
+use App\Models\PlantSpecies;
+use App\Models\PlantVariety;
 use App\Models\TeamInvitation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,7 +14,8 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $email = strtolower($request->user()->email);
+        $user = $request->user();
+        $email = strtolower($user->email);
 
         $pendingInvitations = TeamInvitation::query()
             ->with(['inviter', 'team'])
@@ -31,8 +35,17 @@ class DashboardController extends Controller
                 ],
             ]);
 
+        $moderationStats = null;
+        if ($user->canModerateCatalog()) {
+            $moderationStats = [
+                'pendingSpeciesCount' => PlantSpecies::where('catalog_status', CatalogStatus::PendingReview->value)->whereNull('archived_at')->where('origin', 'user')->count(),
+                'pendingVarietiesCount' => PlantVariety::where('catalog_status', CatalogStatus::PendingReview->value)->whereNull('archived_at')->where('origin', 'user')->count(),
+            ];
+        }
+
         return Inertia::render('dashboard', [
             'pendingInvitations' => $pendingInvitations,
+            'moderationStats' => $moderationStats,
         ]);
     }
 }
