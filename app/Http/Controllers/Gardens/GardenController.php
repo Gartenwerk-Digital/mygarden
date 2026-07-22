@@ -55,7 +55,7 @@ class GardenController extends Controller
         return to_route('gardens.index');
     }
 
-    public function show(Garden $garden): Response
+    public function show(Request $request, Garden $garden): Response
     {
         Gate::authorize('view', $garden);
 
@@ -76,10 +76,25 @@ class GardenController extends Controller
             ->orderBy('name')
             ->get();
 
+        $plantingsPage = max(1, (int) $request->query('plantingsPage', 1));
+
+        $plantings = $garden->plantings()
+            ->with([
+                'species:id,common_name,category,archived_at,deleted_at',
+                'variety:id,name,archived_at,deleted_at',
+                'area:id,name,archived_at,deleted_at',
+            ])
+            ->whereNull('deleted_at')
+            ->orderByRaw('CASE status WHEN "planted" THEN 0 WHEN "planned" THEN 1 WHEN "removed" THEN 2 ELSE 3 END')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(24, ['*'], 'plantingsPage', $plantingsPage);
+
         return Inertia::render('gardens/show', [
             'garden' => $garden,
             'activeAreas' => $activeAreas,
             'archivedAreas' => $archivedAreas,
+            'plantings' => $plantings,
         ]);
     }
 

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { create as createArea } from '@/actions/App/Http/Controllers/Areas/AreaController';
+import { create as createPlanting } from '@/actions/App/Http/Controllers/GardenPlantings/GardenPlantingController';
 import {
     archive,
     destroy,
@@ -22,20 +23,26 @@ import {
 import { AreaCard } from '@/components/areas/area-card';
 import { EmptyState } from '@/components/mygarden/empty-state';
 import { PageHeader } from '@/components/mygarden/page-header';
+import { Pagination } from '@/components/mygarden/pagination';
 import { VisibilityBadge } from '@/components/mygarden/visibility-badge';
+import { PlantingCard } from '@/components/plantings/planting-card';
 import { Button } from '@/components/ui/button';
 import type { Area, Garden } from '@/types';
+import type { GardenPlantingSummary } from '@/types/planting';
+import type { Paginator } from '@/types/ui';
 
 type PageProps = {
     garden: Garden;
     activeAreas: Area[];
     archivedAreas: Area[];
+    plantings: Paginator<GardenPlantingSummary>;
 };
 
 export default function GardensShow({
     garden,
     activeAreas,
     archivedAreas,
+    plantings,
 }: PageProps) {
     const handleArchive = () => {
         router.patch(archive(garden).url);
@@ -211,6 +218,50 @@ export default function GardensShow({
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Pflanzenbestand */}
+                <div className="mt-10">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">
+                            Pflanzenbestand
+                        </h2>
+                        <Button asChild size="sm">
+                            <Link href={createPlanting(garden).url}>
+                                <Plus className="mr-2 size-4" />
+                                Pflanzung hinzufügen
+                            </Link>
+                        </Button>
+                    </div>
+
+                    {plantings.data.length === 0 ? (
+                        <EmptyState
+                            icon={Sprout}
+                            title="Noch keine Pflanzungen"
+                            description="Füge Pflanzen aus dem Katalog zu deinem Garten hinzu."
+                            action={
+                                <Button asChild size="sm">
+                                    <Link href={createPlanting(garden).url}>
+                                        <Plus className="mr-2 size-4" />
+                                        Erste Pflanzung anlegen
+                                    </Link>
+                                </Button>
+                            }
+                        />
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {plantings.data.map((planting) => (
+                                    <PlantingCard
+                                        key={planting.id}
+                                        planting={planting}
+                                        garden={garden}
+                                    />
+                                ))}
+                            </div>
+                            <Pagination paginator={plantings} />
                         </div>
                     )}
                 </div>

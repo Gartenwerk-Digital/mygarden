@@ -60,7 +60,7 @@ class AreaController extends Controller
         return to_route('areas.show', [$garden, $area]);
     }
 
-    public function show(Garden $garden, Area $area): Response
+    public function show(Request $request, Garden $garden, Area $area): Response
     {
         Gate::authorize('view', $area);
 
@@ -69,9 +69,23 @@ class AreaController extends Controller
             'children' => fn ($query) => $query->orderBy('name'),
         ]);
 
+        $areaPlantingsPage = max(1, (int) $request->query('areaPlantingsPage', 1));
+
+        $plantings = $area->plantings()
+            ->with([
+                'species:id,common_name,category,archived_at,deleted_at',
+                'variety:id,name,archived_at,deleted_at',
+            ])
+            ->whereNull('deleted_at')
+            ->orderByRaw('CASE status WHEN "planted" THEN 0 WHEN "planned" THEN 1 WHEN "removed" THEN 2 ELSE 3 END')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(24, ['*'], 'areaPlantingsPage', $areaPlantingsPage);
+
         return Inertia::render('areas/show', [
             'garden' => $garden,
             'area' => $area,
+            'plantings' => $plantings,
         ]);
     }
 
