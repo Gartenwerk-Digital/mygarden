@@ -5,6 +5,8 @@ namespace App\Http\Controllers\GardenPlantings;
 use App\Actions\GardenPlantings\CreateGardenPlanting;
 use App\Actions\GardenPlantings\DeleteGardenPlanting;
 use App\Actions\GardenPlantings\UpdateGardenPlanting;
+use App\Enums\CatalogOrigin;
+use App\Enums\CatalogStatus;
 use App\Enums\PlantingStatus;
 use App\Enums\PlantingUnit;
 use App\Http\Controllers\Controller;
@@ -124,6 +126,9 @@ class GardenPlantingController extends Controller
             ]);
     }
 
+    /**
+     * @return Collection<int, array{id: int, common_name: string, botanical_name: string|null, alternate_name: string|null, origin: value-of<CatalogOrigin>, catalog_status: value-of<CatalogStatus>, varieties: array<int, array{id: int, name: string, catalog_status: value-of<CatalogStatus>}>}>
+     */
     private function availableSpecies(Request $request): Collection
     {
         return PlantSpecies::selectableForPlanting($request->user())
