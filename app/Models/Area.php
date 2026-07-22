@@ -86,4 +86,12 @@ class Area extends Model
     {
         return $this->hasMany(Area::class, 'parent_id');
     }
+
+    /**
+     * @return HasMany<GardenPlanting, $this>
+     */
+    public function plantings(): HasMany
+    {
+        return $this->hasMany(GardenPlanting::class);
+    }
 }
