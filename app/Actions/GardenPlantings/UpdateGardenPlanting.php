@@ -10,9 +10,9 @@ use App\Models\GardenPlanting;
 use App\Models\PlantSpecies;
 use App\Models\PlantVariety;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class UpdateGardenPlanting
@@ -123,7 +123,7 @@ class UpdateGardenPlanting
     /**
      * Returns the new removed_at value, or false if no change is needed.
      *
-     * @return Carbon|null|false
+     * @return CarbonImmutable|null|false
      */
     private function resolveRemovedAt(GardenPlanting $planting, PlantingStatus $newStatus): mixed
     {

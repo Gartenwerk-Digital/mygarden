@@ -124,9 +124,6 @@ class GardenPlantingController extends Controller
             ]);
     }
 
-    /**
-     * @return Collection<int, array{id: int, common_name: string, botanical_name: string|null, alternate_name: string|null, origin: string, catalog_status: string, varieties: list<array{id: int, name: string, catalog_status: string}>}>
-     */
     private function availableSpecies(Request $request): Collection
     {
         return PlantSpecies::selectableForPlanting($request->user())
