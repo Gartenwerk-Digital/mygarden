@@ -15,6 +15,12 @@ class DeleteArea
             ]);
         }
 
+        if ($area->plantings()->whereNull('deleted_at')->exists()) {
+            throw ValidationException::withMessages([
+                'plantings' => __('Dieser Bereich enthält noch Pflanzungen. Bitte zuerst alle Pflanzungen entfernen oder einem anderen Bereich zuordnen.'),
+            ]);
+        }
+
         $area->delete();
     }
 }

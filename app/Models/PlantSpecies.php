@@ -154,10 +154,41 @@ class PlantSpecies extends Model
     }
 
     /**
+     * Scope for species that can be used in new GardenPlantings:
+     * approved entries (system or user), plus own private/pending_review entries.
+     * Excludes rejected, archived, and soft-deleted entries.
+     *
+     * @param  Builder<PlantSpecies>  $query
+     */
+    public function scopeSelectableForPlanting(Builder $query, User $user): void
+    {
+        $query->whereNull('archived_at')
+            ->whereNull('deleted_at')
+            ->where(fn (Builder $q) => $q
+                ->where('catalog_status', CatalogStatus::Approved->value)
+                ->orWhere(fn (Builder $q2) => $q2
+                    ->where('created_by', $user->id)
+                    ->whereIn('catalog_status', [
+                        CatalogStatus::Private->value,
+                        CatalogStatus::PendingReview->value,
+                    ])
+                )
+            );
+    }
+
+    /**
      * @return HasMany<PlantVariety, $this>
      */
     public function varieties(): HasMany
     {
         return $this->hasMany(PlantVariety::class);
+    }
+
+    /**
+     * @return HasMany<GardenPlanting, $this>
+     */
+    public function plantings(): HasMany
+    {
+        return $this->hasMany(GardenPlanting::class, 'plant_species_id');
     }
 }

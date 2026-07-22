@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -101,6 +102,37 @@ class PlantVariety extends Model
                 ->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('created_by', $user->id))
                 ->orWhere(fn (Builder $q2) => $q2->where('origin', CatalogOrigin::User->value)->where('catalog_status', CatalogStatus::Approved->value));
         });
+    }
+
+    /**
+     * Scope for varieties that can be used in new GardenPlantings:
+     * approved entries (system or user), plus own private/pending_review entries.
+     * Excludes rejected, archived, and soft-deleted entries.
+     *
+     * @param  Builder<PlantVariety>  $query
+     */
+    public function scopeSelectableForPlanting(Builder $query, User $user): void
+    {
+        $query->whereNull('archived_at')
+            ->whereNull('deleted_at')
+            ->where(fn (Builder $q) => $q
+                ->where('catalog_status', CatalogStatus::Approved->value)
+                ->orWhere(fn (Builder $q2) => $q2
+                    ->where('created_by', $user->id)
+                    ->whereIn('catalog_status', [
+                        CatalogStatus::Private->value,
+                        CatalogStatus::PendingReview->value,
+                    ])
+                )
+            );
+    }
+
+    /**
+     * @return HasMany<GardenPlanting, $this>
+     */
+    public function plantings(): HasMany
+    {
+        return $this->hasMany(GardenPlanting::class, 'plant_variety_id');
     }
 
     /**
