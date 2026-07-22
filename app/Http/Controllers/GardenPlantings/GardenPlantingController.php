@@ -5,8 +5,6 @@ namespace App\Http\Controllers\GardenPlantings;
 use App\Actions\GardenPlantings\CreateGardenPlanting;
 use App\Actions\GardenPlantings\DeleteGardenPlanting;
 use App\Actions\GardenPlantings\UpdateGardenPlanting;
-use App\Enums\CatalogOrigin;
-use App\Enums\CatalogStatus;
 use App\Enums\PlantingStatus;
 use App\Enums\PlantingUnit;
 use App\Http\Controllers\Controller;
@@ -127,9 +125,9 @@ class GardenPlantingController extends Controller
     }
 
     /**
-     * @return Collection<int, array{id: int, common_name: string, botanical_name: string|null, alternate_name: string|null, origin: value-of<CatalogOrigin>, catalog_status: value-of<CatalogStatus>, varieties: array<int, array{id: int, name: string, catalog_status: value-of<CatalogStatus>}>}>
+     * @return array<int, array{id: int, common_name: string, botanical_name: string|null, alternate_name: string|null, origin: 'system'|'user', catalog_status: 'approved'|'pending_review'|'private'|'rejected', varieties: array<int, array{id: int, name: string, catalog_status: 'approved'|'pending_review'|'private'|'rejected'}>}>
      */
-    private function availableSpecies(Request $request): Collection
+    private function availableSpecies(Request $request): array
     {
         return PlantSpecies::selectableForPlanting($request->user())
             ->with(['varieties' => fn ($q) => $q->selectableForPlanting($request->user())->select(['id', 'plant_species_id', 'name', 'catalog_status'])])
@@ -147,7 +145,9 @@ class GardenPlantingController extends Controller
                     'name' => $v->name,
                     'catalog_status' => $v->catalog_status->value,
                 ])->values()->all(),
-            ]);
+            ])
+            ->values()
+            ->all();
     }
 
     /**
