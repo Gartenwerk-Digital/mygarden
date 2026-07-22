@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Http\Requests\GardenPlantings;
+
+use App\Enums\PlantingStatus;
+use App\Enums\PlantingUnit;
+use App\Models\Area;
+use App\Models\Garden;
+use App\Models\GardenPlanting;
+use App\Models\PlantSpecies;
+use App\Models\PlantVariety;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class StoreGardenPlantingRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        /** @var Garden $garden */
+        $garden = $this->route('garden');
+
+        return $this->user()->can('create', [GardenPlanting::class, $garden]);
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $data = [];
+
+        foreach (['notes', 'nickname', 'planted_at', 'acquired_at', 'quantity', 'quantity_unit', 'plant_variety_id', 'area_id'] as $field) {
+            if ($this->has($field)) {
+                $value = $this->$field;
+                $data[$field] = ($value === '' || $value === null) ? null : $value;
+            }
+        }
+
+        if (! empty($data)) {
+            $this->merge($data);
+        }
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        /** @var Garden $garden */
+        $garden = $this->route('garden');
+        $user = $this->user();
+        $unit = $this->input('quantity_unit');
+
+        $quantityRules = ['nullable', 'required_with:quantity_unit'];
+        if ($unit === PlantingUnit::Pieces->value) {
+            $quantityRules[] = 'integer';
+            $quantityRules[] = 'min:1';
+            $quantityRules[] = 'max:99999999';
+        } else {
+            $quantityRules[] = 'numeric';
+            $quantityRules[] = 'min:0.01';
+            $quantityRules[] = 'max:99999999.99';
+        }
+
+        return [
+            'plant_species_id' => [
+                'required',
+                'integer',
+                Rule::exists('plant_species', 'id'),
+                function (string $attribute, mixed $value, \Closure $fail) use ($user): void {
+                    if (! PlantSpecies::selectableForPlanting($user)->where('id', $value)->exists()) {
+                        $fail('Die gewählte Pflanze ist nicht verfügbar oder nicht auswählbar.');
+                    }
+                },
+            ],
+            'plant_variety_id' => [
+                'nullable',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($user): void {
+                    if ($value === null) {
+                        return;
+                    }
+
+                    $speciesId = $this->input('plant_species_id');
+                    $exists = PlantVariety::selectableForPlanting($user)
+                        ->where('id', $value)
+                        ->where('plant_species_id', $speciesId)
+                        ->exists();
+
+                    if (! $exists) {
+                        $fail('Die gewählte Sorte ist nicht verfügbar oder gehört nicht zur gewählten Pflanze.');
+                    }
+                },
+            ],
+            'area_id' => [
+                'nullable',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($garden): void {
+                    if ($value === null) {
+                        return;
+                    }
+
+                    $valid = Area::where('id', $value)
+                        ->where('garden_id', $garden->id)
+                        ->whereNull('archived_at')
+                        ->whereNull('deleted_at')
+                        ->exists();
+
+                    if (! $valid) {
+                        $fail('Der gewählte Bereich ist nicht gültig oder gehört nicht zu diesem Garten.');
+                    }
+                },
+            ],
+            'status' => ['required', Rule::enum(PlantingStatus::class)],
+            'quantity' => $quantityRules,
+            'quantity_unit' => ['nullable', Rule::enum(PlantingUnit::class), 'required_with:quantity'],
+            'nickname' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:5000'],
+            'planted_at' => ['nullable', 'date'],
+            'acquired_at' => ['nullable', 'date'],
+        ];
+    }
+}
