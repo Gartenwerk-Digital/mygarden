@@ -20,6 +20,7 @@ import {
     unarchive,
     create as createArea,
 } from '@/actions/App/Http/Controllers/Areas/AreaController';
+import { create as createPlanting } from '@/actions/App/Http/Controllers/GardenPlantings/GardenPlantingController';
 import {
     index as indexGardens,
     show as showGarden,
@@ -27,6 +28,8 @@ import {
 import { AreaCard } from '@/components/areas/area-card';
 import { EmptyState } from '@/components/mygarden/empty-state';
 import { PageHeader } from '@/components/mygarden/page-header';
+import { Pagination } from '@/components/mygarden/pagination';
+import { PlantingCard } from '@/components/plantings/planting-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,13 +39,16 @@ import {
     sunExposureLabels,
 } from '@/lib/area-type-icons';
 import type { Area, Garden } from '@/types';
+import type { GardenPlantingSummary } from '@/types/planting';
+import type { Paginator } from '@/types/ui';
 
 type PageProps = {
     garden: Garden;
     area: Area;
+    plantings: Paginator<GardenPlantingSummary>;
 };
 
-export default function AreasShow({ garden, area }: PageProps) {
+export default function AreasShow({ garden, area, plantings }: PageProps) {
     const isRoot = area.parent_id === null;
     const children = area.children ?? [];
     const archivedChildren = area.archivedChildren ?? [];
@@ -234,6 +240,45 @@ export default function AreasShow({ garden, area }: PageProps) {
                         )}
                     </div>
                 )}
+
+                {/* Pflanzen in diesem Bereich */}
+                <div className="mt-10">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">
+                            Pflanzen in diesem Bereich
+                        </h2>
+                        <Button asChild size="sm">
+                            <Link
+                                href={`${createPlanting(garden).url}?area=${area.id}`}
+                            >
+                                <Plus className="mr-2 size-4" />
+                                Pflanzung hinzufügen
+                            </Link>
+                        </Button>
+                    </div>
+
+                    {plantings.data.length === 0 ? (
+                        <EmptyState
+                            icon={Sprout}
+                            title="Keine Pflanzungen"
+                            description="Füge Pflanzen aus dem Katalog zu diesem Bereich hinzu."
+                            className="py-10"
+                        />
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {plantings.data.map((planting) => (
+                                    <PlantingCard
+                                        key={planting.id}
+                                        planting={planting}
+                                        garden={garden}
+                                    />
+                                ))}
+                            </div>
+                            <Pagination paginator={plantings} />
+                        </div>
+                    )}
+                </div>
             </div>
         </>
     );

@@ -68,4 +68,12 @@ class Garden extends Model
     {
         return $this->hasMany(Area::class);
     }
+
+    /**
+     * @return HasMany<GardenPlanting, $this>
+     */
+    public function plantings(): HasMany
+    {
+        return $this->hasMany(GardenPlanting::class);
+    }
 }
