@@ -44,4 +44,9 @@ class GardenPolicy
     {
         return $user->id === $garden->user_id;
     }
+
+    public function forceDelete(User $user, Garden $garden): bool
+    {
+        return $user->id === $garden->user_id;
+    }
 }
