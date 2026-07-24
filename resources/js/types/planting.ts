@@ -3,6 +3,7 @@ import type {
     CatalogStatus,
     PlantCategory,
 } from '@/types/plant';
+import type { PlantingEntry } from '@/types/planting-entry';
 
 export type PlantingStatus = 'planned' | 'planted' | 'removed';
 export type PlantingUnit = 'pieces' | 'square_meters';
@@ -49,6 +50,7 @@ export type GardenPlanting = {
     species?: PlantingSpeciesSummary | null;
     variety?: PlantingVarietySummary | null;
     area?: PlantingAreaSummary | null;
+    entries?: PlantingEntry[];
 };
 
 export type GardenPlantingSummary = {
