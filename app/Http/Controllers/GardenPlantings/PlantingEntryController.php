@@ -51,7 +51,7 @@ class PlantingEntryController extends Controller
         return Inertia::render('planting-entries/edit', [
             'garden' => $garden,
             'planting' => $planting->load(['species', 'variety']),
-            'entry' => $this->entryForInertia($entry),
+            'entry' => $entry->load('images')->toTimelineArray(),
             'entryTypes' => $this->entryTypeOptions(),
         ]);
     }
@@ -80,31 +80,6 @@ class PlantingEntryController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Eintrag gelöscht.')]);
 
         return to_route('plantings.show', [$garden, $planting]);
-    }
-
-    /**
-     * @return array{id: int, garden_planting_id: int, entry_type: string, notes: string|null, occurred_at: string, created_at: string, images: list<array{id: int, planting_entry_id: int, mime_type: string, size: int, sort_order: int, created_at: string}>}
-     */
-    private function entryForInertia(PlantingEntry $entry): array
-    {
-        $entry->load('images');
-
-        return [
-            'id' => $entry->id,
-            'garden_planting_id' => $entry->garden_planting_id,
-            'entry_type' => $entry->entry_type->value,
-            'notes' => $entry->notes,
-            'occurred_at' => $entry->occurred_at->format('Y-m-d'),
-            'created_at' => $entry->created_at,
-            'images' => $entry->images->map(fn ($img) => [
-                'id' => $img->id,
-                'planting_entry_id' => $img->planting_entry_id,
-                'mime_type' => $img->mime_type,
-                'size' => $img->size,
-                'sort_order' => $img->sort_order,
-                'created_at' => $img->created_at,
-            ])->values()->all(),
-        ];
     }
 
     /**

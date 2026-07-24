@@ -45,4 +45,22 @@ class PlantingEntryImage extends Model
     {
         return $this->belongsTo(PlantingEntry::class, 'planting_entry_id');
     }
+
+    /**
+     * Compact array representation for Inertia timeline props.
+     * Excludes the internal storage path.
+     *
+     * @return array{id: int, planting_entry_id: int, mime_type: string, size: int, sort_order: int, created_at: string|null}
+     */
+    public function toTimelineArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'planting_entry_id' => $this->planting_entry_id,
+            'mime_type' => $this->mime_type,
+            'size' => $this->size,
+            'sort_order' => $this->sort_order,
+            'created_at' => $this->created_at?->toIso8601String(),
+        ];
+    }
 }

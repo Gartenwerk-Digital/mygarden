@@ -13,6 +13,7 @@ use App\Http\Requests\GardenPlantings\UpdateGardenPlantingRequest;
 use App\Models\Area;
 use App\Models\Garden;
 use App\Models\GardenPlanting;
+use App\Models\PlantingEntry;
 use App\Models\PlantSpecies;
 use App\Models\PlantVariety;
 use Illuminate\Http\RedirectResponse;
@@ -70,22 +71,7 @@ class GardenPlantingController extends Controller
             ->orderByDesc('id')
             ->paginate(10, ['*'], 'entriesPage')
             ->withQueryString()
-            ->through(fn ($entry) => [
-                'id' => $entry->id,
-                'garden_planting_id' => $entry->garden_planting_id,
-                'entry_type' => $entry->entry_type->value,
-                'notes' => $entry->notes,
-                'occurred_at' => $entry->occurred_at->format('Y-m-d'),
-                'created_at' => $entry->created_at,
-                'images' => $entry->images->map(fn ($img) => [
-                    'id' => $img->id,
-                    'planting_entry_id' => $img->planting_entry_id,
-                    'mime_type' => $img->mime_type,
-                    'size' => $img->size,
-                    'sort_order' => $img->sort_order,
-                    'created_at' => $img->created_at,
-                ])->values()->all(),
-            ]);
+            ->through(fn (PlantingEntry $entry): array => $entry->toTimelineArray());
 
         return Inertia::render('plantings/show', [
             'garden' => $garden,
