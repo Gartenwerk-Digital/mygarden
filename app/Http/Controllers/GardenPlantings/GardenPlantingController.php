@@ -58,15 +58,39 @@ class GardenPlantingController extends Controller
         return to_route('gardens.show', $garden);
     }
 
-    public function show(Garden $garden, GardenPlanting $planting): Response
+    public function show(Request $request, Garden $garden, GardenPlanting $planting): Response
     {
         Gate::authorize('view', $planting);
 
         $planting->load(['species', 'variety', 'area']);
 
+        $entries = $planting->entries()
+            ->with('images:id,planting_entry_id,mime_type,size,sort_order,created_at')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'entriesPage')
+            ->withQueryString()
+            ->through(fn ($entry) => [
+                'id' => $entry->id,
+                'garden_planting_id' => $entry->garden_planting_id,
+                'entry_type' => $entry->entry_type->value,
+                'notes' => $entry->notes,
+                'occurred_at' => $entry->occurred_at->format('Y-m-d'),
+                'created_at' => $entry->created_at,
+                'images' => $entry->images->map(fn ($img) => [
+                    'id' => $img->id,
+                    'planting_entry_id' => $img->planting_entry_id,
+                    'mime_type' => $img->mime_type,
+                    'size' => $img->size,
+                    'sort_order' => $img->sort_order,
+                    'created_at' => $img->created_at,
+                ])->values()->all(),
+            ]);
+
         return Inertia::render('plantings/show', [
             'garden' => $garden,
             'planting' => $planting,
+            'entries' => $entries,
         ]);
     }
 
