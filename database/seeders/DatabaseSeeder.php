@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local')) {
             $this->call(PlantCatalogSeeder::class);
             $this->call(GardenPlantingSeeder::class);
+            $this->call(PlantingEntrySeeder::class);
         }
     }
 }

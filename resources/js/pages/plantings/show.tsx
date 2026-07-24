@@ -12,17 +12,25 @@ import {
 } from '@/actions/App/Http/Controllers/Gardens/GardenController';
 import { PageHeader } from '@/components/mygarden/page-header';
 import { PlantingStatusBadge } from '@/components/plantings/planting-status-badge';
+import { PlantingTimeline } from '@/components/plantings/planting-timeline';
 import { Button } from '@/components/ui/button';
 import type { Garden } from '@/types/garden';
 import type { GardenPlanting } from '@/types/planting';
 import { formatQuantity } from '@/types/planting';
+import type { PlantingEntry } from '@/types/planting-entry';
+import type { Paginator } from '@/types/ui';
 
 type PageProps = {
     garden: Garden;
     planting: GardenPlanting;
+    entries: Paginator<PlantingEntry>;
 };
 
-export default function PlantingsShow({ garden, planting }: PageProps) {
+export default function PlantingsShow({
+    garden,
+    planting,
+    entries,
+}: PageProps) {
     const species = planting.species;
     const variety = planting.variety;
     const area = planting.area;
@@ -193,6 +201,14 @@ export default function PlantingsShow({ garden, planting }: PageProps) {
                             </p>
                         </div>
                     )}
+                </div>
+
+                <div className="mt-10">
+                    <PlantingTimeline
+                        garden={garden}
+                        planting={planting}
+                        entries={entries}
+                    />
                 </div>
             </div>
         </>

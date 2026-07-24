@@ -23,6 +23,7 @@ require __DIR__.'/gardens.php';
 require __DIR__.'/areas.php';
 require __DIR__.'/plants.php';
 require __DIR__.'/plantings.php';
+require __DIR__.'/planting-entries.php';
 
 if (app()->environment('local')) {
     require __DIR__.'/dev.php';

@@ -13,6 +13,7 @@ use App\Http\Requests\GardenPlantings\UpdateGardenPlantingRequest;
 use App\Models\Area;
 use App\Models\Garden;
 use App\Models\GardenPlanting;
+use App\Models\PlantingEntry;
 use App\Models\PlantSpecies;
 use App\Models\PlantVariety;
 use Illuminate\Http\RedirectResponse;
@@ -58,15 +59,24 @@ class GardenPlantingController extends Controller
         return to_route('gardens.show', $garden);
     }
 
-    public function show(Garden $garden, GardenPlanting $planting): Response
+    public function show(Request $request, Garden $garden, GardenPlanting $planting): Response
     {
         Gate::authorize('view', $planting);
 
         $planting->load(['species', 'variety', 'area']);
 
+        $entries = $planting->entries()
+            ->with('images:id,planting_entry_id,mime_type,size,sort_order,created_at')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'entriesPage')
+            ->withQueryString()
+            ->through(fn (PlantingEntry $entry): array => $entry->toTimelineArray());
+
         return Inertia::render('plantings/show', [
             'garden' => $garden,
             'planting' => $planting,
+            'entries' => $entries,
         ]);
     }
 
