@@ -8,6 +8,7 @@ use Database\Factories\GardenPlantingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -95,5 +96,13 @@ class GardenPlanting extends Model
     public function variety(): BelongsTo
     {
         return $this->belongsTo(PlantVariety::class, 'plant_variety_id')->withTrashed();
+    }
+
+    /**
+     * @return HasMany<PlantingEntry, $this>
+     */
+    public function entries(): HasMany
+    {
+        return $this->hasMany(PlantingEntry::class);
     }
 }
