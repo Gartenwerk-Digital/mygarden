@@ -6,6 +6,16 @@ export type GardenVisibility =
  */
 export type Countries = Record<string, string>;
 
+export type GardenImage = {
+    id: number;
+    garden_id: number;
+    mime_type: string;
+    size: number;
+    sort_order: number;
+    is_cover: boolean | null;
+    created_at: string | null;
+};
+
 export type Garden = {
     id: number;
     name: string;
@@ -17,4 +27,6 @@ export type Garden = {
     archived_at: string | null;
     created_at: string;
     updated_at: string;
+    images?: GardenImage[];
+    cover_image?: GardenImage | null;
 };

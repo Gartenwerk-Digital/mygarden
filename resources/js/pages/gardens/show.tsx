@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
     ArchiveRestore,
+    ImagePlus,
     MapPin,
     Pencil,
     Plus,
@@ -20,7 +21,9 @@ import {
     show,
     unarchive,
 } from '@/actions/App/Http/Controllers/Gardens/GardenController';
+import { show as showImage } from '@/actions/App/Http/Controllers/Gardens/GardenImageController';
 import { AreaCard } from '@/components/areas/area-card';
+import { GardenCoverImage } from '@/components/gardens/garden-cover-image';
 import { EmptyState } from '@/components/mygarden/empty-state';
 import { PageHeader } from '@/components/mygarden/page-header';
 import { Pagination } from '@/components/mygarden/pagination';
@@ -118,6 +121,15 @@ export default function GardensShow({
                     </div>
                 )}
 
+                {garden.cover_image && (
+                    <div className="mb-6 max-w-3xl">
+                        <GardenCoverImage
+                            garden={garden}
+                            image={garden.cover_image}
+                        />
+                    </div>
+                )}
+
                 <div className="max-w-2xl space-y-6">
                     <div className="flex items-center gap-3">
                         <VisibilityBadge visibility={garden.visibility} />
@@ -162,6 +174,77 @@ export default function GardensShow({
                         )}
                     </div>
                 </div>
+
+                {(() => {
+                    const galleryImages = (garden.images ?? []).filter(
+                        (image) => !image.is_cover,
+                    );
+                    const hasAnyImage =
+                        (garden.images?.length ?? 0) > 0 || garden.cover_image;
+
+                    if (!hasAnyImage) {
+                        return (
+                            <div className="mt-10">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h2 className="text-lg font-semibold">
+                                        Bilder
+                                    </h2>
+                                    <Button asChild size="sm">
+                                        <Link href={edit(garden).url}>
+                                            <ImagePlus className="mr-2 size-4" />
+                                            Bilder hinzufügen
+                                        </Link>
+                                    </Button>
+                                </div>
+                                <EmptyState
+                                    icon={ImagePlus}
+                                    title="Noch keine Bilder"
+                                    description="Lade im Bearbeiten-Modus Bilder deines Gartens hoch."
+                                />
+                            </div>
+                        );
+                    }
+
+                    if (galleryImages.length === 0) {
+                        return null;
+                    }
+
+                    return (
+                        <div className="mt-10">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h2 className="text-lg font-semibold">
+                                    Weitere Bilder
+                                </h2>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={edit(garden).url}>
+                                        <ImagePlus className="mr-2 size-4" />
+                                        Verwalten
+                                    </Link>
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                                {galleryImages.map((image) => (
+                                    <div
+                                        key={image.id}
+                                        className="overflow-hidden rounded-md border border-border bg-muted"
+                                    >
+                                        <img
+                                            src={
+                                                showImage({
+                                                    garden: garden.id,
+                                                    image: image.id,
+                                                }).url
+                                            }
+                                            alt=""
+                                            loading="lazy"
+                                            className="aspect-square w-full object-cover"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 <div className="mt-10">
                     <div className="mb-4 flex items-center justify-between">
