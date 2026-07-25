@@ -8,8 +8,13 @@ import {
 } from '@/actions/App/Http/Controllers/Gardens/GardenController';
 import { GardenForm } from '@/components/gardens/garden-form';
 import type { GardenFormData } from '@/components/gardens/garden-form';
+import { GardenImageGallery } from '@/components/gardens/garden-image-gallery';
+import { GardenImageUpload } from '@/components/gardens/garden-image-upload';
+import { FormSection } from '@/components/mygarden/form-section';
 import { PageHeader } from '@/components/mygarden/page-header';
 import type { Countries, Garden } from '@/types/garden';
+
+const MAX_IMAGES_PER_GARDEN = 20;
 
 type PageProps = {
     garden: Garden;
@@ -39,7 +44,7 @@ export default function GardensEdit({ garden, countries }: PageProps) {
             <div className="p-4 md:p-6">
                 <PageHeader title="Garten bearbeiten" className="mb-6" />
 
-                <div className="max-w-2xl">
+                <div className="max-w-2xl space-y-10">
                     <GardenForm
                         data={data}
                         errors={errors}
@@ -50,6 +55,25 @@ export default function GardensEdit({ garden, countries }: PageProps) {
                         submitLabel="Änderungen speichern"
                         cancelHref={show(garden).url}
                     />
+
+                    <FormSection
+                        title="Bilder verwalten"
+                        description={`Bis zu ${MAX_IMAGES_PER_GARDEN} Bilder pro Garten. Ein Bild kann als Titelbild markiert werden.`}
+                    >
+                        <div className="space-y-6">
+                            <GardenImageGallery
+                                garden={garden}
+                                images={garden.images ?? []}
+                            />
+                            <GardenImageUpload
+                                garden={garden}
+                                remainingSlots={
+                                    MAX_IMAGES_PER_GARDEN -
+                                    (garden.images?.length ?? 0)
+                                }
+                            />
+                        </div>
+                    </FormSection>
                 </div>
             </div>
         </>

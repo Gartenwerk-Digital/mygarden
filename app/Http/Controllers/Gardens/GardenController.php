@@ -90,8 +90,10 @@ class GardenController extends Controller
             ->orderByDesc('id')
             ->paginate(24, ['*'], 'plantingsPage', $plantingsPage);
 
+        $garden->load(['images', 'coverImage']);
+
         return Inertia::render('gardens/show', [
-            'garden' => $garden,
+            'garden' => $this->gardenWithImagesPayload($garden),
             'activeAreas' => $activeAreas,
             'archivedAreas' => $archivedAreas,
             'plantings' => $plantings,
@@ -102,10 +104,28 @@ class GardenController extends Controller
     {
         Gate::authorize('update', $garden);
 
+        $garden->load(['images', 'coverImage']);
+
         return Inertia::render('gardens/edit', [
-            'garden' => $garden,
+            'garden' => $this->gardenWithImagesPayload($garden),
             'countries' => Countries::LIST,
         ]);
+    }
+
+    /**
+     * Serialisiert den Garden inkl. images + coverImage explizit über
+     * GardenImage::toInertiaArray(), damit interne Storage-Pfade nicht
+     * an das Frontend gelangen.
+     *
+     * @return array<string, mixed>
+     */
+    private function gardenWithImagesPayload(Garden $garden): array
+    {
+        $payload = $garden->toArray();
+        $payload['images'] = $garden->images->map(fn ($image) => $image->toInertiaArray())->all();
+        $payload['cover_image'] = $garden->coverImage?->toInertiaArray();
+
+        return $payload;
     }
 
     public function update(UpdateGardenRequest $request, Garden $garden, UpdateGarden $action): RedirectResponse
