@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -75,5 +76,23 @@ class Garden extends Model
     public function plantings(): HasMany
     {
         return $this->hasMany(GardenPlanting::class);
+    }
+
+    /**
+     * @return HasMany<GardenImage, $this>
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(GardenImage::class)
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /**
+     * @return HasOne<GardenImage, $this>
+     */
+    public function coverImage(): HasOne
+    {
+        return $this->hasOne(GardenImage::class)->where('is_cover', true);
     }
 }
