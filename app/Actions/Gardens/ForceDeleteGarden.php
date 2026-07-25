@@ -18,7 +18,7 @@ class ForceDeleteGarden
             throw new AuthorizationException;
         }
 
-        $paths = $garden->plantings()
+        $plantingPaths = $garden->plantings()
             ->withTrashed()
             ->with(['entries.images'])
             ->get()
@@ -26,6 +26,10 @@ class ForceDeleteGarden
                 fn ($entry) => $entry->images->pluck('path')
             ))
             ->all();
+
+        $gardenImagePaths = $garden->images()->pluck('path')->all();
+
+        $paths = array_merge($plantingPaths, $gardenImagePaths);
 
         DB::transaction(fn () => $garden->forceDelete());
 
