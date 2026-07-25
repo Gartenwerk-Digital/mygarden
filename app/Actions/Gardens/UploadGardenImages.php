@@ -102,7 +102,7 @@ class UploadGardenImages
     private function assertFilesValid(array $files): void
     {
         foreach ($files as $file) {
-            if (! $file instanceof UploadedFile || ! $file->isValid()) {
+            if (! $file->isValid()) {
                 throw ValidationException::withMessages([
                     'images' => __('Ungültige Datei.'),
                 ]);
